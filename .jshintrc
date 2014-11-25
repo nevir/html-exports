@@ -1,0 +1,17 @@
+{
+  "camelcase": true,
+  "eqeqeq":    true,
+  "forin":     true,
+  "indent":    2,
+  "newcap":    true,
+  "noarg":     true,
+  "nonbsp":    true,
+  "quotmark":  "single",
+  "undef":     true,
+  "unused":    true,
+  "asi":       true,
+  "boss":      true,
+  "esnext":    true,
+  "browser":   true,
+  "node":      true
+}
