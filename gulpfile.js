@@ -11,7 +11,7 @@ var PROJECT_ROOT = __dirname
 
 // Tasks
 
-gulp.task('default', ['watch', 'test'])
+gulp.task('default', ['watch', 'build', 'test'])
 gulp.task('test',    ['test:style'])
 
 gulp.task('test:style', function() {
@@ -28,6 +28,8 @@ gulp.task('watch', function() {
   return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test', 'build'])
 })
 
+// As much as I'd like to use ES6 for the source, and just transpile it, the
+// Traceur runtime is too much overhead for a simple "shim" like this.
 gulp.task('build', function() {
   gulp.src(MAIN_SOURCES)
     .pipe(concat('html-exports.js'))
