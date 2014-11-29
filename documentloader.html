@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"><head><title>documentloader</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="documentloader"><meta name="groc-project-path" content="src/documentloader.js"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path">src/documentloader.js</div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="htmlexportsdocumentloader">HTMLExports.DocumentLoader</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper">;(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope)</span> {</span>
+<span class="hljs-pi">  'use strict'</span>
+
+  scope.DocumentLoader = DocumentLoader</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO(nevir)</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">DocumentLoader</span><span class="hljs-params">(options, parentHooks)</span> {</span>
+    Reflect.Loader.call(<span class="hljs-keyword">this</span>, options || {})
+    <span class="hljs-keyword">this</span>._parentHooks = parentHooks || Reflect.Loader.prototype
+  }
+  DocumentLoader.prototype = <span class="hljs-built_in">Object</span>.create(Reflect.Loader.prototype)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="-documentloader-mixin-"><code>DocumentLoader.mixin</code></h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Rather than instantiating and managing a <code>DocumentLoader</code> directly, you
+will frequently want to mix <code>DocumentLoader</code>&#39;s behavior into an existing
+instance of <code>Reflect.Loader</code>.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-keyword">var</span> MIXIN_HOOKS = [<span class="hljs-string">'locate'</span>, <span class="hljs-string">'fetch'</span>, <span class="hljs-string">'instantiate'</span>]</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The hooks defined on the loader instance will be overridden, and chained
+when operating on a resource that <code>DocumentLoader</code> doesn&#39;t understand.
+For example, to override the default system loader:</p>
+<pre><code class="lang-js">HTMLExports.DocumentLoader.mixin(System)</code></pre></div></div><div class="code"><div class="wrapper">  DocumentLoader.mixin = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">mixin</span><span class="hljs-params">(loader)</span> {</span>
+    console.debug(<span class="hljs-string">'DocumentLoader.mixin('</span>, loader, <span class="hljs-string">')'</span>)
+    <span class="hljs-keyword">var</span> parentHooks = {}
+    <span class="hljs-keyword">var</span> instance = <span class="hljs-keyword">new</span> <span class="hljs-keyword">this</span>({}, parentHooks)
+    MIXIN_HOOKS.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(hook)</span> {</span>
+      parentHooks[hook] = loader[hook].bind(loader)
+      loader[hook] = instance[hook].bind(instance)
+    })
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="loader-hooks">Loader Hooks</h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-documentloader-locate-"><code>DocumentLoader#locate</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Most commonly, authors are defining and referencing their HTML documents
+with a <code>.html</code> extension. <code>DocumentLoader</code> uses this as a hint to directly
+load the module as a document.</p></div></div><div class="code"><div class="wrapper">  DocumentLoader.prototype.locate = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">locate</span><span class="hljs-params">(load)</span> {</span>
+    console.debug(<span class="hljs-string">'DocumentLoader#locate('</span>, load, <span class="hljs-string">')'</span>)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>DocumentLoader</code> also introduces <code>contentType</code> as a general purpose
+metadata property for load records.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (!load.metadata.contentType &amp;&amp; load.name.slice(-<span class="hljs-number">5</span>) === <span class="hljs-string">'.html'</span>) {
+      load.metadata.contentType = <span class="hljs-string">'text/html'</span>
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The module&#39;s name is used as its address, as HTML Imports (utilized when
+loading documents) handles relative address resolution.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (load.metadata.contentType === <span class="hljs-string">'text/html'</span>) {
+      <span class="hljs-keyword">return</span> load.name
+    }
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._parentHooks.locate.apply(<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>)
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-documentloader-fetch-"><code>DocumentLoader#fetch</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO(nevir)</p></div></div><div class="code"><div class="wrapper">  DocumentLoader.prototype.fetch = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">fetch</span><span class="hljs-params">(load)</span> {</span>
+    console.debug(<span class="hljs-string">'DocumentLoader#fetch('</span>, load, <span class="hljs-string">')'</span>)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If we are unsure of the module&#39;s type, we load it via default mechanisms
+(i.e. XHR).</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (load.metadata.contentType !== <span class="hljs-string">'text/html'</span>) {
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._parentHooks.fetch.apply(<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>)
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>For any module that we are confident is a HTML document, we load it
+directly via a <code>&lt;link rel=&quot;import&quot; ...&gt;</code>, allowing us to offload much of</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resolve, reject)</span> {</span>
+
+      <span class="hljs-keyword">var</span> link = document.createElement(<span class="hljs-string">'link'</span>)
+      link.setAttribute(<span class="hljs-string">'rel'</span>, <span class="hljs-string">'import'</span>)
+      link.setAttribute(<span class="hljs-string">'href'</span>, load.address)
+
+      link.addEventListener(<span class="hljs-string">'load'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+        resolve(link.import)
+        link.remove()
+      })
+
+      link.addEventListener(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> {</span>
+        reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Unknown failure when fetching URL: '</span> + load.address))
+        link.remove()
+      })
+
+      document.head.appendChild(link)
+    })
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-documentloader-instantiate-"><code>DocumentLoader#instantiate</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO(nevir)</p></div></div><div class="code"><div class="wrapper">  DocumentLoader.prototype.instantiate = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">instantiate</span><span class="hljs-params">(load)</span> {</span>
+    console.debug(<span class="hljs-string">'DocumentLoader#instantiate('</span>, load, <span class="hljs-string">')'</span>)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO(nevir): Ideally, this shim should check the content type of the
+response (and attempt to detect the content type for misconfigured
+servers). That introduces a fair bit of complexity, and the current
+assumption is that authors will always specify the <code>.html</code> extension.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (!(load.source <span class="hljs-keyword">instanceof</span> Document)) {
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._parentHooks.instantiate.apply(<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>)
+    }
+
+    <span class="hljs-keyword">return</span> {
+      deps: scope.depsFor(load.source),
+      execute: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">execute</span><span class="hljs-params">()</span> {</span>
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.newModule(scope.exportsFor(load.source))
+      }.bind(<span class="hljs-keyword">this</span>)
+    }
+  }
+
+})(<span class="hljs-keyword">this</span>.HTMLExports = <span class="hljs-keyword">this</span>.HTMLExports || {})</div></div></div></div></body></html>
