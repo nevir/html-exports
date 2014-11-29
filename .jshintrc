@@ -13,5 +13,9 @@
   "boss":      true,
   "esnext":    true,
   "browser":   true,
-  "node":      true
+  "node":      true,
+  "predef": [
+    "Document",
+    "HTMLExports"
+  ]
 }

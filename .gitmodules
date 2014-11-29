@@ -1,0 +1,4 @@
+[submodule "doc"]
+	path = doc
+	url = https://github.com/nevir/html-exports
+	branch = gh-pages

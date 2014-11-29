@@ -1,4 +1,26 @@
-// # `DocumentLoader`
+// # HTMLExports
+
+;(function(scope) {
+
+  // TODO(nevir)
+  scope.depsFor = function depsFor(document) {
+    return []
+  }
+
+  // TODO(nevir)
+  scope.exportsFor = function exportsFor(document) {
+    var exports = {}
+    var exportedNodes = document.querySelectorAll('[id][export]')
+    for (var i = 0, node; node = exportedNodes[i]; i++) {
+      exports[node.getAttribute('id')] = node
+    }
+
+    return exports
+  }
+
+})(this.HTMLExports = this.HTMLExports || {})
+
+// # HTMLExports.DocumentLoader
 
 ;(function(scope) {
   'use strict'
@@ -25,40 +47,49 @@
   //
   // For example, to override the default system loader:
   //
-  //   HTMLExports.DocumentLoader.mixin(System)
+  // ```js
+  // HTMLExports.DocumentLoader.mixin(System)
+  // ```
   //
   DocumentLoader.mixin = function mixin(loader) {
+    console.debug('DocumentLoader.mixin(', loader, ')')
     var parentHooks = {}
     var instance = new this({}, parentHooks)
     MIXIN_HOOKS.forEach(function(hook) {
-      parentHooks[hook] = instance[hook]
+      parentHooks[hook] = loader[hook].bind(loader)
       loader[hook] = instance[hook].bind(instance)
     })
   }
 
   // ## Loader Hooks
 
+  // ### `DocumentLoader#locate`
+
   // Most commonly, authors are defining and referencing their HTML documents
   // with a `.html` extension. `DocumentLoader` uses this as a hint to directly
   // load the module as a document.
   DocumentLoader.prototype.locate = function locate(load) {
+    console.debug('DocumentLoader#locate(', load, ')')
     // `DocumentLoader` also introduces `contentType` as a general purpose
     // metadata property for load records.
     if (!load.metadata.contentType && load.name.slice(-5) === '.html') {
       load.metadata.contentType = 'text/html'
     }
 
+    // The module's name is used as its address, as HTML Imports (utilized when
+    // loading documents) handles relative address resolution.
     if (load.metadata.contentType === 'text/html') {
-      // We load HTML documents via HTML Imports, which resolves relative paths
-      // for us.
       return load.name
     }
 
     return this._parentHooks.locate.apply(this, arguments)
   }
 
+  // ### `DocumentLoader#fetch`
+
   // TODO(nevir)
   DocumentLoader.prototype.fetch = function fetch(load) {
+    console.debug('DocumentLoader#fetch(', load, ')')
     // If we are unsure of the module's type, we load it via default mechanisms
     // (i.e. XHR).
     if (load.metadata.contentType !== 'text/html') {
@@ -88,8 +119,11 @@
     })
   }
 
+  // ### `DocumentLoader#instantiate`
+
   // TODO(nevir)
   DocumentLoader.prototype.instantiate = function instantiate(load) {
+    console.debug('DocumentLoader#instantiate(', load, ')')
     // TODO(nevir): Ideally, this shim should check the content type of the
     // response (and attempt to detect the content type for misconfigured
     // servers). That introduces a fair bit of complexity, and the current
@@ -102,7 +136,7 @@
       deps: scope.depsFor(load.source),
       execute: function execute() {
         return this.newModule(scope.exportsFor(load.source))
-      }
+      }.bind(this)
     }
   }
 
