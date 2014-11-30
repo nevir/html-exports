@@ -1,6 +1,7 @@
 // # HTMLExports
 
 ;(function(scope) {
+  'use strict'
 
   // TODO(nevir)
   scope.depsFor = function depsFor(document) {
