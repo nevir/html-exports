@@ -42,6 +42,7 @@
     // so that they are not overridden.
     if (loader.paths) {
       loader.paths['*.html'] = '*.html'
+      console.log('setting paths', loader.paths)
     }
   }
 
@@ -68,7 +69,9 @@
       link.setAttribute('href', load.address)
 
       link.addEventListener('load', function() {
-        resolve(link.import)
+        var doc = link.import
+        doc.match = function() {}  // Make System.js happy.
+        resolve(doc)
         link.remove()
       })
 

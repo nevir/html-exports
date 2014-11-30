@@ -11,6 +11,7 @@
     "gulp-webserver": "^0.8.7",
     "jshint-stylish": "^1.0.0",
     "lazypipe": "^0.2.2",
+    "systemjs": "^0.10.1",
     "traceur": "0.0.74"
   }
 }
