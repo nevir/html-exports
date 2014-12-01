@@ -16,6 +16,7 @@
   "node":      true,
   "predef": [
     "Document",
-    "HTMLExports"
+    "HTMLExports",
+    "HTMLTemplateElement"
   ]
 }

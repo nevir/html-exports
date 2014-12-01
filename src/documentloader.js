@@ -18,7 +18,7 @@
   // will frequently want to mix `DocumentLoader`'s behavior into an existing
   // instance of `Reflect.Loader`.
   //
-  var MIXIN_HOOKS = ['fetch', 'instantiate']
+  var MIXIN_HOOKS = ['instantiate']
   //
   // The hooks defined on the loader instance will be overridden, and chained
   // when operating on a resource that `DocumentLoader` doesn't understand.
@@ -48,61 +48,71 @@
 
   // ## Loader Hooks
 
-  // ### `DocumentLoader#fetch`
-
-  // TODO(nevir)
-  DocumentLoader.prototype.fetch = function fetch(load) {
-    // If we are unsure of the module's type, we load it via default mechanisms
-    // (i.e. XHR).
-    if (load.name.slice(-5) !== '.html') {
-      return this._parentHooks.fetch.apply(this, arguments)
-    }
-    console.debug('DocumentLoader#fetch(', load, ')')
-
-    // For any module that we are confident is a HTML document, we load it
-    // directly via a `<link rel="import" ...>`, allowing us to offload much of
-    //
-    return new Promise(function(resolve, reject) {
-
-      var link = document.createElement('link')
-      link.setAttribute('rel', 'import')
-      link.setAttribute('href', load.address)
-
-      link.addEventListener('load', function() {
-        var doc = link.import
-        doc.match = function() {}  // Make System.js happy.
-        resolve(doc)
-        link.remove()
-      })
-
-      link.addEventListener('error', function() {
-        reject(new Error('Unknown failure when fetching URL: ' + load.address))
-        link.remove()
-      })
-
-      document.head.appendChild(link)
-    })
-  }
-
   // ### `DocumentLoader#instantiate`
 
   // TODO(nevir)
   DocumentLoader.prototype.instantiate = function instantiate(load) {
-    // TODO(nevir): Ideally, this shim should check the content type of the
-    // response (and attempt to detect the content type for misconfigured
-    // servers). That introduces a fair bit of complexity, and the current
-    // assumption is that authors will always specify the `.html` extension.
-    if (!(load.source instanceof Document)) {
+    if (!this._isHtml(load)) {
       return this._parentHooks.instantiate.apply(this, arguments)
     }
     console.debug('DocumentLoader#instantiate(', load, ')')
 
+    var doc = this._newDocument(load)
     return {
-      deps: scope.depsFor(load.source),
+      deps: scope.depsFor(doc),
       execute: function execute() {
-        return this.newModule(scope.exportsFor(load.source))
-      }.bind(this)
+        return this.newModule(scope.exportsFor(doc))
+      }.bind(this),
     }
+  }
+
+  // Internal Implementation
+
+  DocumentLoader.prototype._isHtml = function _isHtml(load) {
+    // A `.html` extension is a good hint.
+    var path = load.address || load.name
+    if (path && path.slice(-5) === '.html') {
+      return true
+    }
+
+    // Otherwise, we check the content for something that looks like HTML:
+    if (load.source && load.source.match && load.source.match(/^\s*</)) {
+      return true
+    }
+
+    return false
+  }
+
+  // While I'd prefer to make use of HTML Imports, System.js (rightfully) makes
+  // many assumptions about load record's `source` being a string. So, we just
+  // consume that.
+  //
+  // This mostly follows the HTML Imports polyfill:
+  // https://github.com/Polymer/HTMLImports/blob/master/src/importer.js#L121-147
+  DocumentLoader.prototype._newDocument = function _newDocument(load) {
+    var doc = document.implementation.createHTMLDocument('module: ' + load.name)
+
+    // TODO(nevir): do we need to build a base URL from this?
+    var base = doc.createElement('base')
+    base.setAttribute('href', load.address)
+    if (!doc.baseURI) {
+      doc.baseURI = load.address
+    }
+    doc.head.appendChild(base)
+
+    // Imports/module enforce UTF-8
+    var meta = doc.createElement('meta')
+    meta.setAttribute('charset', 'utf-8')
+    doc.head.appendChild(meta)
+
+    // Actually import the resource.
+    doc.body.innerHTML = load.source
+    // Template polyfill support.
+    if (window.HTMLTemplateElement && HTMLTemplateElement.bootstrap) {
+      HTMLTemplateElement.bootstrap(doc)
+    }
+
+    return doc
   }
 
 })(this.HTMLExports = this.HTMLExports || {})
