@@ -38,11 +38,16 @@
       loader[hook] = instance[hook].bind(instance)
     })
 
-    // If the user is using es6-module-loader, make sure to set up `.html` URLs
-    // so that they are not overridden.
+    // If the author is using es6-module-loader, make sure to set up `.html`
+    // URLs so that they are not overridden.
     if (loader.paths) {
       loader.paths['*.html'] = '*.html'
-      console.log('setting paths', loader.paths)
+    }
+
+    // And if the author is using System.js, we have to shim the original
+    // System too...
+    if (loader.originalSystem) {
+      DocumentLoader.mixin(loader.originalSystem)
     }
   }
 
