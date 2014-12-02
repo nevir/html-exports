@@ -4,6 +4,7 @@ var gulp      = require('gulp')
 var jshint    = require('gulp-jshint')
 var notify    = require('gulp-notify')
 var path      = require('path')
+var rename    = require('gulp-rename')
 var replace   = require('gulp-replace')
 var webserver = require('gulp-webserver')
 
@@ -15,15 +16,15 @@ var PROJECT_ROOT = __dirname
 
 gulp.task('default', ['watch', 'build', 'test', 'docs'])
 gulp.task('test',    ['test:style'])
-gulp.task('build', ['build:dev', 'build:main'])
+gulp.task('build',   ['build:dev', 'build:main'])
 
 gulp.task('watch', function() {
   watching = true
-  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test', 'build', 'docs'])
+  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test', 'build:main', 'docs'])
 })
 
 gulp.task('demo', ['build'], function() {
-  gulp.src('.')
+  return gulp.src('.')
     .pipe(webserver({
       livereload: true,
       open:       '/demo/custom-element',
@@ -31,7 +32,7 @@ gulp.task('demo', ['build'], function() {
 })
 
 gulp.task('docs', ['build:main'], function() {
-  gulp.src(MAIN_SOURCES)
+  return gulp.src(MAIN_SOURCES)
     .pipe(groc({
       out:   'doc',
       index: 'src/base.js',
@@ -42,15 +43,16 @@ gulp.task('docs', ['build:main'], function() {
 // As much as I'd like to use ES6 for the source, and just transpile it, the
 // Traceur runtime is too much overhead for a simple "shim" like this.
 gulp.task('build:dev', function() {
-  gulp.src(MAIN_SOURCES)
+  return gulp.src(MAIN_SOURCES)
     .pipe(concat('html-exports.dev.js'))
     .pipe(gulp.dest('./dist'))
 })
 
 gulp.task('build:main', ['build:dev'], function() {
-  gulp.src(['html-exports.dev.js'])
+  return gulp.src(['./dist/html-exports.dev.js'])
     .pipe(replace(/\n\s*console.debug[^\n]+/g, ''))
-    .pipe(gulp.dest('./dist/html-exports.js'))
+    .pipe(rename('html-exports.js'))
+    .pipe(gulp.dest('./dist'))
 })
 
 gulp.task('test:style', function() {
