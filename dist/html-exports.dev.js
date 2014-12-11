@@ -66,12 +66,6 @@
     if (loader.paths) {
       loader.paths['*.html'] = '*.html'
     }
-
-    // And if the author is using System.js, we have to shim the original
-    // System too...
-    if (loader.originalSystem) {
-      DocumentLoader.mixin(loader.originalSystem)
-    }
   }
 
   // ## Loader Hooks
