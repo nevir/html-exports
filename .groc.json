@@ -1,0 +1,7 @@
+{
+  "glob": ["src/**/*.js"],
+  "index": "src/base.js",
+  "strip": "src/",
+  "github": false,
+  "repository-url": "https://github.com/nevir/html-exports"
+}

@@ -3,10 +3,13 @@
 ;(function(scope) {
   'use strict'
 
-  // TODO(nevir)
+  // ### `HTMLExports.depsFor`
+
   scope.depsFor = function depsFor(document) {
     return []
   }
+
+  // ### `HTMLExports.exportsFor`
 
   // TODO(nevir)
   scope.exportsFor = function exportsFor(document) {

@@ -3,10 +3,13 @@
 ;(function(scope) {
   'use strict'
 
-  // TODO(nevir)
+  // ### `HTMLExports.depsFor`
+
   scope.depsFor = function depsFor(document) {
     return []
   }
+
+  // ### `HTMLExports.exportsFor`
 
   // TODO(nevir)
   scope.exportsFor = function exportsFor(document) {
@@ -21,14 +24,19 @@
 
 })(this.HTMLExports = this.HTMLExports || {})
 
-// # HTMLExports.DocumentLoader
+// # DocumentLoader
 
+// `HTMLExports.DocumentLoader` is a module loader that exposes `.html`
+// documents as another valid module type that can be loaded.
+//
+// This loader attempts to adhere to the module loader spec as best it can.
+// However, note that the spec was removed from the ES6 draft spec (with the
+// intent to have a separate modules spec).
 ;(function(scope) {
   'use strict'
 
   scope.DocumentLoader = DocumentLoader
 
-  // TODO(nevir)
   function DocumentLoader(options, parentHooks) {
     Reflect.Loader.call(this, options || {})
     this._parentHooks = parentHooks || Reflect.Loader.prototype
@@ -62,7 +70,7 @@
     })
 
     // If the author is using es6-module-loader, make sure to set up `.html`
-    // URLs so that they are not overridden.
+    // URLs so that they are not assumed to be `.html.js`.
     if (loader.paths) {
       loader.paths['*.html'] = '*.html'
     }
@@ -70,16 +78,46 @@
 
   // ## Loader Hooks
 
+  // For the most part, we leverage the behavior of `Reflect.Loader` to handle
+  // locating and fetching `.html` resources.
+  //
+  // While this does dramatically simplify the logic of `DocumentLoader`, it
+  // prevents us from using native machinery (i.e. HTML Imports). We can
+  // potentially hack around it, but it becomes awkward and brittle:
+  //
+  //  * The `fetch` hook expects a `String` to be returned, and load records
+  //    assume that the `source` property is also a `String`. If we were to
+  //    make use of HTML Imports, we get a `Document`, not a `String`.
+  //
+  //    * Note that this does work with the [es6-module-loader polyfill](https://github.com/ModuleLoader/es6-module-loader),
+  //      but breaks [System.js](https://github.com/systemjs/systemjs) (see the
+  //      change where we [convert away from using imports](https://github.com/nevir/html-exports/commit/48a61c762aebb4df52f858746ad9df64cd58de2d)).
+  //
+  //  * Presumably, the only thing we gain from using (native) HTML Imports to
+  //    fetch documents is prefetching and parallel parsing.
+  //
+
   // ### `DocumentLoader#instantiate`
 
-  // TODO(nevir)
+  // If the load record represents a HTML document, load it as a module.
+  //
+  // Declared (module) dependencies are extracted from the document's source,
+  // according to [`HTMLExports.depsFor`](index.html#-htmlexports-depsfor-).
+  // Similarly, exports are determined via [`HTMLExports.exportsFor`](index.html#-htmlexports-exportsfor-).
+  //
+  // For expected behavior of the hook, see sections 15.2.4.5.2 and 15.2.4.5.3
+  // of the [Aug 24, 2014 ES6 spec draft](http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts).
   DocumentLoader.prototype.instantiate = function instantiate(load) {
     if (!this._isHtml(load)) {
       return this._parentHooks.instantiate.apply(this, arguments)
     }
     console.debug('DocumentLoader#instantiate(', load, ')')
 
+    //- TODO(nevir): We should really only be extracting deps at this stage, and
+    //- parsing the document async (if possible), so that we can start
+    //- (pre)fetching dependencies ASAP.
     var doc = this._newDocument(load)
+
     return {
       deps: scope.depsFor(doc),
       execute: function execute() {
@@ -88,16 +126,24 @@
     }
   }
 
-  // Internal Implementation
+  // ## Internal Implementation
 
+  // A load record can be determined to represent a HTML document via various
+  // hints and bits of metadata:
   DocumentLoader.prototype._isHtml = function _isHtml(load) {
-    // A `.html` extension is a good hint.
+    // * An extension of `.html` is assumed to represent a HTML document.
     var path = load.address || load.name
     if (path && path.slice(-5) === '.html') {
       return true
     }
 
-    // Otherwise, we check the content for something that looks like HTML:
+    // * `Content-Type: text/html` is another hint, but not supported for now.
+    //
+    //- TODO(nevir): Coordinate with es6-module-loader/System.js to propagate
+    //- response headers through as load record metadata.
+
+    // * A document that begins with `<` is similarly assumed to be HTML. This
+    //   helps to cover cases where one's server is misconfigured.
     if (load.source && load.source.match && load.source.match(/^\s*</)) {
       return true
     }
@@ -105,31 +151,32 @@
     return false
   }
 
-  // While I'd prefer to make use of HTML Imports, System.js (rightfully) makes
-  // many assumptions about load record's `source` being a string. So, we just
-  // consume that.
+  // Because we cannot rely on HTML imports (native or polyfill) to construct
+  // the `Document` for us, it is left to us.
   //
-  // This mostly follows the HTML Imports polyfill:
-  // https://github.com/Polymer/HTMLImports/blob/master/src/importer.js#L121-147
+  // This mostly follows the [HTML Imports polyfill](https://github.com/Polymer/HTMLImports/blob/master/src/importer.js#L121-147).
   DocumentLoader.prototype._newDocument = function _newDocument(load) {
     var doc = document.implementation.createHTMLDocument('module: ' + load.name)
 
-    // TODO(nevir): do we need to build a base URL from this?
+    // The document is given a base URL via the `base` element...
     var base = doc.createElement('base')
     base.setAttribute('href', load.address)
+    // ... as well as the `baseURI` property (for IE support).
     if (!doc.baseURI) {
       doc.baseURI = load.address
     }
     doc.head.appendChild(base)
 
-    // Imports/module enforce UTF-8
+    // Additionally, we enforce that HTML modules are encoded as `UTF-8`. HTML
+    // Imports does this, so we assume that it is safe to carry over to modules.
     var meta = doc.createElement('meta')
     meta.setAttribute('charset', 'utf-8')
     doc.head.appendChild(meta)
 
-    // Actually import the resource.
     doc.body.innerHTML = load.source
-    // Template polyfill support.
+
+    // Unfortunately, there is a little bit of work to support the polyfill for
+    // `<template>` elements.
     if (window.HTMLTemplateElement && HTMLTemplateElement.bootstrap) {
       HTMLTemplateElement.bootstrap(doc)
     }

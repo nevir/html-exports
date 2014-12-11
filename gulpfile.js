@@ -14,13 +14,14 @@ var PROJECT_ROOT = __dirname
 
 // Tasks
 
-gulp.task('default', ['watch', 'build', 'test', 'docs'])
-gulp.task('test',    ['test:style'])
+require('web-component-tester').gulp.init(gulp);
+gulp.task('default', ['watch', 'build', 'test:style', 'docs'])
+gulp.task('test',    ['test:style', 'test:local'])
 gulp.task('build',   ['build:dev', 'build:main'])
 
 gulp.task('watch', function() {
   watching = true
-  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test', 'build:main', 'docs'])
+  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:main', 'docs'])
 })
 
 gulp.task('demo', ['build'], function() {
@@ -33,11 +34,7 @@ gulp.task('demo', ['build'], function() {
 
 gulp.task('docs', ['build:main'], function() {
   return gulp.src(MAIN_SOURCES)
-    .pipe(groc({
-      out:   'doc',
-      index: 'src/base.js',
-      strip: 'src/',
-    }))
+    .pipe(groc())
 })
 
 // As much as I'd like to use ES6 for the source, and just transpile it, the
@@ -67,6 +64,7 @@ gulp.task('test:style', function() {
 // Pretty errors for our various tasks.
 
 var watching = false
+
 function onError(error) {
   if (watching) {
     var message = error.message.replace(new RegExp(PROJECT_ROOT + path.sep, 'g'), '')
