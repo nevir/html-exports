@@ -55,8 +55,8 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "type": "heading",
           "data": {
             "level": 1,
-            "title": "HTMLExports.DocumentLoader",
-            "slug": "htmlexportsdocumentloader",
+            "title": "DocumentLoader",
+            "slug": "documentloader",
             "isFileHeader": true
           },
           "depth": 1,
@@ -69,10 +69,18 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
                 "slug": "loader-hooks"
               },
               "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Internal Implementation",
+                "slug": "internal-implementation"
+              },
+              "depth": 2
             }
           ]
         },
-        "title": "HTMLExports.DocumentLoader"
+        "title": "DocumentLoader"
       },
       "depth": 1,
       "outline": [
@@ -82,6 +90,14 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
             "level": 2,
             "title": "Loader Hooks",
             "slug": "loader-hooks"
+          },
+          "depth": 2
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Internal Implementation",
+            "slug": "internal-implementation"
           },
           "depth": 2
         }
@@ -104,8 +120,7 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         "pageTitle": "system",
         "title": "system"
       },
-      "depth": 1,
-      "outline": []
+      "depth": 1
     }
   ];
 
