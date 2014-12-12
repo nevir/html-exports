@@ -21,20 +21,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         "projectPath": "src/base.js",
         "targetPath": "index",
         "pageTitle": "index",
-        "firstHeader": {
-          "type": "heading",
-          "data": {
-            "level": 1,
-            "title": "HTMLExports",
-            "slug": "htmlexports",
-            "isFileHeader": true
-          },
-          "depth": 1
-        },
-        "title": "HTMLExports"
+        "title": "index"
       },
-      "depth": 1,
-      "outline": []
+      "depth": 1
     }, {
       "type": "file",
       "data": {
@@ -51,57 +40,9 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         "projectPath": "src/documentloader.js",
         "targetPath": "documentloader",
         "pageTitle": "documentloader",
-        "firstHeader": {
-          "type": "heading",
-          "data": {
-            "level": 1,
-            "title": "DocumentLoader",
-            "slug": "documentloader",
-            "isFileHeader": true
-          },
-          "depth": 1,
-          "children": [
-            {
-              "type": "heading",
-              "data": {
-                "level": 2,
-                "title": "Loader Hooks",
-                "slug": "loader-hooks"
-              },
-              "depth": 2
-            }, {
-              "type": "heading",
-              "data": {
-                "level": 2,
-                "title": "Internal Implementation",
-                "slug": "internal-implementation"
-              },
-              "depth": 2
-            }
-          ]
-        },
-        "title": "DocumentLoader"
+        "title": "documentloader"
       },
-      "depth": 1,
-      "outline": [
-        {
-          "type": "heading",
-          "data": {
-            "level": 2,
-            "title": "Loader Hooks",
-            "slug": "loader-hooks"
-          },
-          "depth": 2
-        }, {
-          "type": "heading",
-          "data": {
-            "level": 2,
-            "title": "Internal Implementation",
-            "slug": "internal-implementation"
-          },
-          "depth": 2
-        }
-      ]
+      "depth": 1
     }, {
       "type": "file",
       "data": {
