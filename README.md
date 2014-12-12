@@ -1,7 +1,6 @@
 # HTML Exports
 
-Why let JavaScript have all the fun? HTML Exports allows you to use HTML 
-documents as modules too!
+Why let JavaScript have all the fun? HTML documents can be modules too!
 
 **This is a work in progress. Do not expect it to work yet!**
 
