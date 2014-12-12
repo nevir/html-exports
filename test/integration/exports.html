@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../../node_modules/webcomponents.js/webcomponents.js"></script>
+  <script src="../../node_modules/web-component-tester/browser.js"></script>
+  <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.src.js"></script>
+  <script src="../../dist/html-exports.js"></script>
+  <script src="../shared/fixtures.js"></script>
+</head>
+<body>
+  <script>
+    var fixtures = importFixtures('words.html');
+
+    // Yay, tautology!
+    specify('exported elements are exported', function() {
+      expect(fixtures.words.one.textContent).to.eq('Lorem')
+      expect(fixtures.words.two.textContent).to.eq('ipsum')
+    })
+
+    specify('elements with just an id are not exported', function() {
+      expect(fixtures.words.three).to.eq(undefined)
+    })
+
+  </script>
+</body>
+</html>
