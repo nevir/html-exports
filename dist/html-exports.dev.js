@@ -5,7 +5,7 @@
 
   // ### `HTMLExports.depsFor`
 
-  scope.depsFor = function depsFor(document) {
+  scope.depsFor = function depsFor(source) {
     return []
   }
 
@@ -113,14 +113,14 @@
     }
     console.debug('DocumentLoader#instantiate(', load, ')')
 
-    //- TODO(nevir): We should really only be extracting deps at this stage, and
-    //- parsing the document async (if possible), so that we can start
-    //- (pre)fetching dependencies ASAP.
-    var doc = this._newDocument(load)
-
     return {
-      deps: scope.depsFor(doc),
-      execute: function execute() {
+      deps: scope.depsFor(load.source),
+      execute: function executeHTMLDocument() {
+        //- TODO(nevir): Ideally we'd be constructing/loading the doc async. And
+        //- we probably want to wait for the load event, too.
+        //-
+        //- See https://github.com/ModuleLoader/es6-module-loader/issues/263
+        var doc = this._newDocument(load)
         return this.newModule(scope.exportsFor(doc))
       }.bind(this),
     }
@@ -144,7 +144,10 @@
 
     // * A document that begins with `<` is similarly assumed to be HTML. This
     //   helps to cover cases where one's server is misconfigured.
-    if (load.source && load.source.match && load.source.match(/^\s*</)) {
+    //
+    //- Note the stupid basic UTF BOM detection.
+    var LOOKS_LIKE_HTML = /^([\x00\xBB\xBF\xEF\xFF\xFE]{2,4})?\s*</
+    if (load.source && LOOKS_LIKE_HTML.test(load.source)) {
       return true
     }
 

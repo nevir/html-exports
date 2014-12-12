@@ -5,7 +5,7 @@
 
   // ### `HTMLExports.depsFor`
 
-  scope.depsFor = function depsFor(document) {
+  scope.depsFor = function depsFor(source) {
     return []
   }
 
