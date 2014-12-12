@@ -1,0 +1,5 @@
+.fixture-word {
+  color: red;
+}
+
+@import "style-import-nested.css";
