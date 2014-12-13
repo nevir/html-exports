@@ -44,7 +44,7 @@ gulp.task('demo', ['build'], function() {
     }))
 })
 
-gulp.task('doc', ['build:main'], function() {
+gulp.task('doc', function() {
   return gulp.src(MAIN_SOURCES)
     .pipe(groc())
 })
