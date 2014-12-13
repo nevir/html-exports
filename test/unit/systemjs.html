@@ -5,12 +5,21 @@
   <script src="../../node_modules/webcomponents.js/webcomponents.js"></script>
   <script src="../../node_modules/web-component-tester/browser.js"></script>
   <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.src.js"></script>
-  <script src="../../dist/html-exports.debug.js"></script>
-  <script src="../shared/fixtures.js"></script>
+  <script src="../../node_modules/systemjs/dist/system.src.js"></script>
 </head>
 <body>
   <script>
+    System.paths.html = '../../dist/sysjs-plugin/html.debug.js'
 
+    specify('Works with implicit plugin names', function(done) {
+      // Some combination of SystemJS and es6-module-loader's pathing makes
+      // relative URLs really weird here, so we set up a fixture relative to the
+      // current document, rather than trying to get ../ to work.
+      System.import('systemjs/thing.html!html').then(function(exports) {
+        expect(exports.foo.textContent).to.equal('bar')
+        done()
+      }, done)
+    })
   </script>
 </body>
 </html>

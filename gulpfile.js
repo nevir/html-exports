@@ -11,16 +11,15 @@ var uglify    = require('gulp-uglify')
 var webserver = require('gulp-webserver')
 
 var ALL_SOURCES  = ['gulpfile.js', '{demo,src,test}/**/*.{html,js}']
-var MAIN_SOURCES = ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js']
 var PROJECT_ROOT = __dirname
 
 var BUILD_VARIATIONS = {
   main: {
-    sources:  ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js'],
+    sources:  ['src/loaderhooks.js', 'src/documentloader.js', 'src/system.js'],
     destBase: './dist/html-exports',
   },
   sysjs: {
-    sources:  ['src/loaderhooks.js'],
+    sources:  ['src/loaderhooks.js', 'src/sysjs-plugin.js'],
     destBase: './dist/sysjs-plugin/html',
   },
 }
@@ -33,7 +32,7 @@ gulp.task('test',    ['test:style', 'test:local'])
 
 gulp.task('watch', function() {
   watching = true
-  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:debug', 'doc'])
+  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build', 'doc'])
 })
 
 gulp.task('demo', ['build'], function() {
@@ -45,7 +44,7 @@ gulp.task('demo', ['build'], function() {
 })
 
 gulp.task('doc', function() {
-  return gulp.src(MAIN_SOURCES)
+  return gulp.src('src/**/*.js')
     .pipe(groc())
 })
 

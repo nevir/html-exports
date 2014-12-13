@@ -16,7 +16,7 @@
     "lodash": "^2.4.1",
     "systemjs": "^0.10.1",
     "traceur": "0.0.74",
-    "web-component-tester": "^2.0.2",
+    "web-component-tester": "^2.0.5",
     "webcomponents.js": "^0.5.1-1"
   }
 }

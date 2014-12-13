@@ -24,7 +24,7 @@
 
     specify('the document is the default default export', function() {
       expect(fixtures.words.default).to.be.an.instanceOf(Document)
-      expect(fixtures.words.default.URL).to.match(/fixtures\/words\.html/)
+      expect(fixtures.words.default.baseURI).to.match(/fixtures\/words\.html/)
     })
 
     specify('default exports can be declared without an id', function() {

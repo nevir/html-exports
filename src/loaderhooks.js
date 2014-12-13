@@ -5,11 +5,11 @@
 //
 // These hooks are designed to be consumed via various interfaces:
 //
-//  * They can be used directly as a [SystemJS plugin](https://github.com/systemjs/systemjs/wiki/Creating-a-Plugin).
-//
 //  * They are indirectly mixed into [`DocumentLoader`](documentloader.html).
 //
 //  * They can be mixed into any existing loader via [`DocumentLoader.mixin`](documentloader.html#-documentloader-mixin-).
+//
+//  * They can be used via a [SystemJS plugin](sysjs-plugin.html).
 //
 ;(function(scope) {
   'use strict'

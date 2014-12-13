@@ -5,11 +5,11 @@
 //
 // These hooks are designed to be consumed via various interfaces:
 //
-//  * They can be used directly as a [SystemJS plugin](https://github.com/systemjs/systemjs/wiki/Creating-a-Plugin).
-//
 //  * They are indirectly mixed into [`DocumentLoader`](documentloader.html).
 //
 //  * They can be mixed into any existing loader via [`DocumentLoader.mixin`](documentloader.html#-documentloader-mixin-).
+//
+//  * They can be used via a [SystemJS plugin](sysjs-plugin.html).
 //
 ;(function(scope) {
   'use strict'
@@ -140,3 +140,19 @@
   }
 
 })(this.HTMLExports = this.HTMLExports || {})
+
+// # SystemJS Plugin
+
+// Note that there is an assumption that `HTMLExports.LoaderHooks` exists in the
+// scope (which is taken care of by the build process).
+var LoaderHooks = this.HTMLExports.LoaderHooks
+
+Object.keys(LoaderHooks).forEach(function(hookName) {
+  exports[hookName] = LoaderHooks[hookName]
+})
+
+// SystemJS' plugin interface has a slightly different interface for the
+// `instantiate` hook. It expects the module to be directly returned:
+exports.instantiate = function instantiateHTML() {
+  return LoaderHooks.instantiate.apply(this, arguments).execute()
+}
