@@ -18,16 +18,32 @@ examples of importing via HTML. I.e.:</p>
 <pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span> <span class="hljs-attribute">as</span>=<span class="hljs-value">"$"</span>/&gt;</span>
 <span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"./templates.html"</span> <span class="hljs-attribute">values</span>=<span class="hljs-value">"user post"</span>/&gt;</span></code></pre>
 <p>etc.</p>
-<h3 id="importing-via-es6">Importing Via ES6</h3>
+<h3 id="importing-html-modules-via-es6">Importing HTML Modules Via ES6</h3>
 <p>Just treat a HTML module as you would any other module:</p>
 <pre><code>import { user, post } from &#39;./templates.html&#39;</code></pre>
 <p><code>user</code> and <code>post</code> are the <em>elements</em> exported by <code>templates.html</code>!</p>
-<h2 id="understanding-it">Understanding It</h2>
-<p>For a deeper understanding of how HTML Exports works, take a look at
-<a href="https://nevir.github.io/html-exports">the annotated source</a>.</p>
+<h2 id="using-it">Using It</h2>
+<p>Include <a href="dist/"><code>html-exports.min.js</code></a> in your page, after loading
+<a href="https://github.com/ModuleLoader/es6-module-loader">es6-module-loader</a>:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"es6-module-loader.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"html-exports.min.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span></code></pre>
+<p>This gives you the default behavior where any module with a <code>.html</code> extension
+is treated as a HTML module.</p>
+<h3 id="systemjs">SystemJS</h3>
+<p>Alternatively, you can use the SystemJS plugin by grabbing
+<a href="dist/sysjs-plugin">a build</a> of it, renaming your build to <code>html.js</code> and
+placing that build somewhere on your load path for SystemJS to discover.</p>
+<p>You can then load HTML modules via:</p>
+<pre><code class="lang-js"><span class="hljs-comment">// Implicit plugin name</span>
+import { user, post } from <span class="hljs-string">'./templates.html!'</span>
+<span class="hljs-comment">// Or explicit plugin name:</span>
+import { user, post } from <span class="hljs-string">'./templates.html!html'</span></code></pre>
 <h2 id="playing-with-it">Playing With It</h2>
 <p>Try out the demo:</p>
 <pre><code class="lang-sh">gulp demo</code></pre>
 <h2 id="hacking-on-it">Hacking On It</h2>
 <p>Run this in the background for continuous testing/building:</p>
-<pre><code class="lang-sh">gulp</code></pre></div></div></div></div></body></html>
+<pre><code class="lang-sh">gulp</code></pre>
+<h2 id="understanding-it">Understanding It</h2>
+<p>For a deeper understanding of how HTML Exports works, take a look at
+<a href="https://nevir.github.io/html-exports">the annotated source</a>.</p></div></div></div></div></body></html>
