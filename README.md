@@ -33,16 +33,6 @@ You can also declare dependencies on other modules from HTML.
 <import src="jQuery"/>
 ```
 
-TODO(nevir): Figure out document scoping of imported values, and more advanced
-examples of importing via HTML. I.e.:
-
-```html
-<import src="jQuery" as="$"/>
-<import src="./templates.html" values="user post"/>
-```
-
-etc.
-
 
 ### Importing HTML Modules Via ES6 
 
