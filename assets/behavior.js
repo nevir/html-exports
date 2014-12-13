@@ -284,6 +284,36 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
           "foldPrefix": "^",
           "name": "JavaScript"
         },
+        "sourcePath": "/Users/imac/work/projects/html-exports/src/sysjs-plugin.js",
+        "projectPath": "src/sysjs-plugin.js",
+        "targetPath": "sysjs-plugin",
+        "pageTitle": "sysjs-plugin",
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "SystemJS Plugin",
+            "slug": "systemjs-plugin",
+            "isFileHeader": true
+          },
+          "depth": 1
+        },
+        "title": "SystemJS Plugin"
+      },
+      "depth": 1,
+      "outline": []
+    }, {
+      "type": "file",
+      "data": {
+        "language": {
+          "nameMatchers": [".js"],
+          "pygmentsLexer": "javascript",
+          "multiLineComment": ["/*", "*", "*/"],
+          "singleLineComment": ["//"],
+          "ignorePrefix": "}",
+          "foldPrefix": "^",
+          "name": "JavaScript"
+        },
         "sourcePath": "/Users/imac/work/projects/html-exports/src/system.js",
         "projectPath": "src/system.js",
         "targetPath": "system",

@@ -2,11 +2,11 @@
 underlying behavior for loading HTML documents as modules.</p>
 <p>These hooks are designed to be consumed via various interfaces:</p>
 <ul>
-<li><p>They can be used directly as a <a href="https://github.com/systemjs/systemjs/wiki/Creating-a-Plugin">SystemJS plugin</a>.</p>
-</li>
 <li><p>They are indirectly mixed into <a href="documentloader.html"><code>DocumentLoader</code></a>.</p>
 </li>
 <li><p>They can be mixed into any existing loader via <a href="documentloader.html#-documentloader-mixin-"><code>DocumentLoader.mixin</code></a>.</p>
+</li>
+<li><p>They can be used via a <a href="sysjs-plugin.html">SystemJS plugin</a>.</p>
 </li>
 </ul></div></div><div class="code"><div class="wrapper">;(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope)</span> </span>{
 <span class="hljs-pi">  'use strict'</span>
@@ -70,7 +70,8 @@ element:</p>
     <span class="hljs-keyword">if</span> (defaultNodes.length &gt; <span class="hljs-number">1</span>) {
       <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Only one default export is allowed per document'</span>)
     } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (defaultNodes.length === <span class="hljs-number">1</span>) {
-      exports.default = defaultNodes[<span class="hljs-number">0</span>]
+      exports.default = defaultNodes[<span class="hljs-number">0</span>]</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Otherwise, the default export will be the document.</p></div></div><div class="code"><div class="wrapper">    } <span class="hljs-keyword">else</span> {
+      exports.default = <span class="hljs-built_in">document</span>
     }
 
     <span class="hljs-keyword">return</span> exports
