@@ -9,19 +9,19 @@ var replace   = require('gulp-replace')
 var webserver = require('gulp-webserver')
 
 var ALL_SOURCES  = ['gulpfile.js', '{demo,src,test}/**/*.{html,js}']
-var MAIN_SOURCES = ['src/base.js', 'src/**/*.js', 'src/system.js']
+var MAIN_SOURCES = ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js']
 var PROJECT_ROOT = __dirname
 
 // Tasks
 
 require('web-component-tester').gulp.init(gulp);
-gulp.task('default', ['watch', 'build', 'test:style', 'docs'])
+gulp.task('default', ['watch', 'build', 'test:style', 'doc'])
 gulp.task('test',    ['test:style', 'test:local'])
 gulp.task('build',   ['build:dev', 'build:main'])
 
 gulp.task('watch', function() {
   watching = true
-  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:main', 'docs'])
+  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:main', 'doc'])
 })
 
 gulp.task('demo', ['build'], function() {
@@ -32,7 +32,7 @@ gulp.task('demo', ['build'], function() {
     }))
 })
 
-gulp.task('docs', ['build:main'], function() {
+gulp.task('doc', ['build:main'], function() {
   return gulp.src(MAIN_SOURCES)
     .pipe(groc())
 })
@@ -47,7 +47,7 @@ gulp.task('build:dev', function() {
 
 gulp.task('build:main', ['build:dev'], function() {
   return gulp.src(['./dist/html-exports.dev.js'])
-    .pipe(replace(/\n\s*console.debug[^\n]+/g, ''))
+    .pipe(replace(/\n\s*console.(debug|assert)[^\n]+/g, ''))
     .pipe(rename('html-exports.js'))
     .pipe(gulp.dest('./dist'))
 })

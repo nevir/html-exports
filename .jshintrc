@@ -15,8 +15,13 @@
   "browser":   true,
   "node":      true,
   "predef": [
+    "before",
+    "describe",
     "Document",
+    "expect",
     "HTMLExports",
-    "HTMLTemplateElement"
+    "HTMLTemplateElement",
+    "importFixtures",
+    "specify"
   ]
 }

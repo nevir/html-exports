@@ -1,45 +1,157 @@
-// # HTMLExports
+// # LoaderHooks
 
+// `HTMLExports.LoaderHooks` is a mixable map of loader hooks that provide the
+// underlying behavior for loading HTML documents as modules.
+//
+// These hooks are designed to be consumed via various interfaces:
+//
+//  * They can be used directly as a [SystemJS plugin](https://github.com/systemjs/systemjs/wiki/Creating-a-Plugin).
+//
+//  * They are indirectly mixed into [`DocumentLoader`](documentloader.html).
+//
+//  * They can be mixed into any existing loader via [`DocumentLoader.mixin`](documentloader.html#-documentloader-mixin-).
+//
 ;(function(scope) {
   'use strict'
 
+  var LoaderHooks = {}
+  scope.LoaderHooks = LoaderHooks
+
+  // ## `LoaderHooks.fetch`
+
+  // Documents are fetched via a dynamic HTML import. This ensures that the
+  // document's linked resources (stylesheets, scripts, etc) are also properly
+  // loaded.
+  //
+  // The alternative would be for us to fetch document source and construct/load
+  // HTML documents ourselves. This becomes rather complex, and would end up
+  // duplicating much of the logic expressed by the HTML Imports polyfill.
+  LoaderHooks.fetch = function fetchHTML(load) {
+    console.debug('HTMLExports.LoaderHooks.fetch(', load, ')')
+
+    return new Promise(function(resolve, reject) {
+      var link = _newDynamicImport(load.address)
+
+      link.addEventListener('error', function() {
+        reject(new Error('Unknown failure when fetching URL: ' + load.address))
+      })
+
+      // A downside of this approach is that the module loader asserts that
+      // module source is a string. Not to mention, userland loaders such as
+      // SystemJS tend to assume that the source is JavaScript.
+      link.addEventListener('load', function() {
+        // To protect ourselves, and adhere to the spec as best we can, the
+        // real source is placed in the load record's `metadata` as a side
+        // channel.
+        load.metadata.importedHTMLDocument = link.import
+        // And then, to appease the spec/SystemJS, we provide a dummy value for
+        // `source`.
+        resolve('')
+      })
+    })
+  }
+
+  // ## `LoaderHooks.instantiate`
+
+  // Once we have a document fetched via HTML imports, we can extract the
+  // its dependencies and exported values.
+  //
+  // However, it is worth noting that we gain the same document semantics as
+  // HTML imports: stylesheets are merged into the root document, scripts
+  // evaluate globally, etc. Good for simplifying code, not great for scoping.
+  //
+  // Furthermore, imports are not considered loaded until all of their linked
+  // dependencies (stylesheets, scripts, etc) have also loaded. This makes
+  // prefetching declared module dependencies difficult/impossible.
+  LoaderHooks.instantiate = function instantiateHTML(load) {
+    console.debug('HTMLExports.LoaderHooks.instantiate(', load, ')')
+    var doc = load.metadata.importedHTMLDocument
+    if (!doc) {
+      throw new Error('HTMLExports bug: Expected fetched Document in metadata')
+    }
+
+    return {
+      deps: scope.depsFor(doc),
+      execute: function executeHTML() {
+        return this.newModule(scope.exportsFor(doc))
+      }.bind(this),
+    }
+  }
+
+  // ## Document Processing
+
   // ### `HTMLExports.depsFor`
 
-  scope.depsFor = function depsFor(source) {
-    return []
+  // HTML modules can declare dependencies on any other modules via the `import`
+  // element:
+  //
+  // ```html
+  // <import src="some-module">
+  // ```
+  scope.depsFor = function depsFor(document) {
+    var declaredDependencies = document.querySelectorAll('import[src]')
+    return Array.prototype.map.call(declaredDependencies, function(importNode) {
+      return importNode.getAttribute('src')
+    })
   }
 
   // ### `HTMLExports.exportsFor`
 
-  // TODO(nevir)
+  // HTML modules can export elements that are tagged with `export`.
   scope.exportsFor = function exportsFor(document) {
     var exports = {}
-    var exportedNodes = document.querySelectorAll('[id][export]')
+    // They can either be named elements (via `id`), such as:
+    //
+    // ```html
+    // <div export id="foo">...</div>
+    // ```
+    var exportedNodes = document.querySelectorAll('[export][id]')
     for (var i = 0, node; node = exportedNodes[i]; i++) {
       exports[node.getAttribute('id')] = node
     }
 
+    // Or they can be the default export when tagged with `default`:
+    //
+    // ```html
+    // <div export default>...</div>
+    // ```
+    var defaultNodes = document.querySelectorAll('[export][default]')
+    if (defaultNodes.length > 1) {
+      throw new Error('Only one default export is allowed per document')
+    } else if (defaultNodes.length === 1) {
+      exports.default = defaultNodes[0]
+    }
+
     return exports
+  }
+
+  // ## Internal Implementation
+
+  function _newDynamicImport(address) {
+    var link = document.createElement('link')
+    link.setAttribute('rel', 'import')
+    link.setAttribute('href', address)
+    link.setAttribute('module', '')  // Annotate the link for debugability.
+
+    document.head.appendChild(link)
+
+    return link
   }
 
 })(this.HTMLExports = this.HTMLExports || {})
 
 // # DocumentLoader
 
-// `HTMLExports.DocumentLoader` is a module loader that exposes `.html`
-// documents as another valid module type that can be loaded.
-//
-// This loader attempts to adhere to the module loader spec as best it can.
-// However, note that the spec was removed from the ES6 draft spec (with the
-// intent to have a separate modules spec).
 ;(function(scope) {
   'use strict'
 
   scope.DocumentLoader = DocumentLoader
 
-  function DocumentLoader(options, parentHooks) {
+  // `HTMLExports.DocumentLoader` is a module loader that loads any modules with
+  // a `.html` extension as a HTML module. See [`HTMLExports.LoaderHooks`](loaderhooks.html)
+  // for the underlying behavior.
+  function DocumentLoader(options) {
     Reflect.Loader.call(this, options || {})
-    this._parentHooks = parentHooks || Reflect.Loader.prototype
   }
   DocumentLoader.prototype = Object.create(Reflect.Loader.prototype)
 
@@ -47,12 +159,7 @@
 
   // Rather than instantiating and managing a `DocumentLoader` directly, you
   // will frequently want to mix `DocumentLoader`'s behavior into an existing
-  // instance of `Reflect.Loader`.
-  //
-  var MIXIN_HOOKS = ['instantiate']
-  //
-  // The hooks defined on the loader instance will be overridden, and chained
-  // when operating on a resource that `DocumentLoader` doesn't understand.
+  // loader.
   //
   // For example, to override the default system loader:
   //
@@ -62,136 +169,46 @@
   //
   DocumentLoader.mixin = function mixin(loader) {
     console.debug('DocumentLoader.mixin(', loader, ')')
-    var parentHooks = {}
-    var instance = new this({}, parentHooks)
-    MIXIN_HOOKS.forEach(function(hook) {
-      parentHooks[hook] = loader[hook].bind(loader)
-      loader[hook] = instance[hook].bind(instance)
+
+    Object.keys(scope.LoaderHooks).forEach(function(hookName) {
+      console.assert(hookName !== 'normalize', 'only supports hooks that accept a load record')
+
+      var htmlHook   = scope.LoaderHooks[hookName]
+      var parentHook = loader[hookName]
+      loader[hookName] = function(load) {
+        return (_isHtml(load) ? htmlHook : parentHook).apply(this, arguments)
+      }
     })
 
-    // If the author is using es6-module-loader, make sure to set up `.html`
-    // URLs so that they are not assumed to be `.html.js`.
+    // If the author is using es6-module-loader or SystemJS, an entry is added
+    // to their `paths` property so that `.html` addresses are not resolved as
+    // `.html.js`.
     if (loader.paths) {
       loader.paths['*.html'] = '*.html'
     }
   }
 
-  // ## Loader Hooks
-
-  // For the most part, we leverage the behavior of `Reflect.Loader` to handle
-  // locating and fetching `.html` resources.
-  //
-  // While this does dramatically simplify the logic of `DocumentLoader`, it
-  // prevents us from using native machinery (i.e. HTML Imports). We can
-  // potentially hack around it, but it becomes awkward and brittle:
-  //
-  //  * The `fetch` hook expects a `String` to be returned, and load records
-  //    assume that the `source` property is also a `String`. If we were to
-  //    make use of HTML Imports, we get a `Document`, not a `String`.
-  //
-  //    * Note that this does work with the [es6-module-loader polyfill](https://github.com/ModuleLoader/es6-module-loader),
-  //      but breaks [System.js](https://github.com/systemjs/systemjs) (see the
-  //      change where we [convert away from using imports](https://github.com/nevir/html-exports/commit/48a61c762aebb4df52f858746ad9df64cd58de2d)).
-  //
-  //  * Presumably, the only thing we gain from using (native) HTML Imports to
-  //    fetch documents is prefetching and parallel parsing.
-  //
-
-  // ### `DocumentLoader#instantiate`
-
-  // If the load record represents a HTML document, load it as a module.
-  //
-  // Declared (module) dependencies are extracted from the document's source,
-  // according to [`HTMLExports.depsFor`](index.html#-htmlexports-depsfor-).
-  // Similarly, exports are determined via [`HTMLExports.exportsFor`](index.html#-htmlexports-exportsfor-).
-  //
-  // For expected behavior of the hook, see sections 15.2.4.5.2 and 15.2.4.5.3
-  // of the [Aug 24, 2014 ES6 spec draft](http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts).
-  DocumentLoader.prototype.instantiate = function instantiate(load) {
-    if (!this._isHtml(load)) {
-      return this._parentHooks.instantiate.apply(this, arguments)
-    }
-    console.debug('DocumentLoader#instantiate(', load, ')')
-
-    return {
-      deps: scope.depsFor(load.source),
-      execute: function executeHTMLDocument() {
-        //- TODO(nevir): Ideally we'd be constructing/loading the doc async. And
-        //- we probably want to wait for the load event, too.
-        //-
-        //- See https://github.com/ModuleLoader/es6-module-loader/issues/263
-        var doc = this._newDocument(load)
-        return this.newModule(scope.exportsFor(doc))
-      }.bind(this),
-    }
-  }
+  DocumentLoader.mixin(DocumentLoader.prototype)
 
   // ## Internal Implementation
 
-  // A load record can be determined to represent a HTML document via various
-  // hints and bits of metadata:
-  DocumentLoader.prototype._isHtml = function _isHtml(load) {
-    // * An extension of `.html` is assumed to represent a HTML document.
-    var path = load.address || load.name
-    if (path && path.slice(-5) === '.html') {
-      return true
-    }
-
-    // * `Content-Type: text/html` is another hint, but not supported for now.
-    //
-    //- TODO(nevir): Coordinate with es6-module-loader/System.js to propagate
-    //- response headers through as load record metadata.
-
-    // * A document that begins with `<` is similarly assumed to be HTML. This
-    //   helps to cover cases where one's server is misconfigured.
-    //
-    //- Note the stupid basic UTF BOM detection.
-    var LOOKS_LIKE_HTML = /^([\x00\xBB\xBF\xEF\xFF\xFE]{2,4})?\s*</
-    if (load.source && LOOKS_LIKE_HTML.test(load.source)) {
-      return true
-    }
-
-    return false
-  }
-
-  // Because we cannot rely on HTML imports (native or polyfill) to construct
-  // the `Document` for us, it is left to us.
+  // Any module with an extension of `.html` is assumed to represent a HTML
+  // document.
   //
-  // This mostly follows the [HTML Imports polyfill](https://github.com/Polymer/HTMLImports/blob/master/src/importer.js#L121-147).
-  DocumentLoader.prototype._newDocument = function _newDocument(load) {
-    var doc = document.implementation.createHTMLDocument('module: ' + load.name)
-
-    // The document is given a base URL via the `base` element...
-    var base = doc.createElement('base')
-    base.setAttribute('href', load.address)
-    // ... as well as the `baseURI` property (for IE support).
-    if (!doc.baseURI) {
-      doc.baseURI = load.address
-    }
-    doc.head.appendChild(base)
-
-    // Additionally, we enforce that HTML modules are encoded as `UTF-8`. HTML
-    // Imports does this, so we assume that it is safe to carry over to modules.
-    var meta = doc.createElement('meta')
-    meta.setAttribute('charset', 'utf-8')
-    doc.head.appendChild(meta)
-
-    doc.body.innerHTML = load.source
-
-    // Unfortunately, there is a little bit of work to support the polyfill for
-    // `<template>` elements.
-    if (window.HTMLTemplateElement && HTMLTemplateElement.bootstrap) {
-      HTMLTemplateElement.bootstrap(doc)
-    }
-
-    return doc
+  // We cannot perform any smarter heuristics (such as checking content type),
+  // as this check is performed before the `fetch` step completes.
+  function _isHtml(load) {
+    var path = load.address || load.name
+    return path && path.slice(-5) === '.html'
   }
 
 })(this.HTMLExports = this.HTMLExports || {})
 
+// # Global Behavior
 ;(function(scope) {
   'use strict'
 
+  // When HTML Exports is used normally, it is mixed into the `System` loader.
   scope.DocumentLoader.mixin(System)
 
 })(this.HTMLExports = this.HTMLExports || {})

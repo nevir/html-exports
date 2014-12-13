@@ -1,7 +1,5 @@
 {
-  "glob": ["src/**/*.js"],
-  "index": "src/base.js",
-  "strip": "src/",
+  "glob": ["README.md", "src/**/*.js"],
   "github": false,
   "repository-url": "https://github.com/nevir/html-exports"
 }

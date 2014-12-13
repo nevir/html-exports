@@ -1,5 +1,3 @@
-.fixture-word {
-  color: red;
-}
-
 @import "style-import-nested.css";
+
+.fixture-target {padding-top: 1px;}

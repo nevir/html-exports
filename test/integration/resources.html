@@ -10,11 +10,11 @@
 </head>
 <body>
   <script>
-    var fixtures = importFixtures('resources.html');
+    var fixtures = importFixtures('resources.html')
 
-    var styled = document.createElement('span')
-    styled.classList.add('fixture-word')
-    document.body.appendChild(styled)
+    var styledEl = document.createElement('div')
+    styledEl.classList.add('fixture-target')
+    document.body.appendChild(styledEl)
 
     specify('resources don\'t screw with the module loading process', function() {
       expect(fixtures.resources.sentinel.textContent).to.equal('loaded')
@@ -25,15 +25,15 @@
     })
 
     specify('<link rel="stylesheet"> loads relative to the module', function() {
-      expect(styled.style.color).to.equal('red')
+      expect(getComputedStyle(styledEl).paddingTop).to.equal('1px')
     })
 
     specify('CSS @import loads relative to the module', function() {
-      expect(styled.style.backgroundColor).to.equal('blue')
+      expect(getComputedStyle(styledEl).paddingRight).to.equal('2px')
     })
 
     specify('Nested CSS @import loads relative to the stylesheet', function() {
-      expect(styled.style.borderColor).to.equal('green')
+      expect(getComputedStyle(styledEl).paddingBottom).to.equal('3px')
     })
 
     specify('<link rel="import"> loads relative to the module', function() {

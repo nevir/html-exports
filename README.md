@@ -2,8 +2,6 @@
 
 Why let JavaScript have all the fun? HTML documents can be modules too!
 
-**This is a work in progress. Do not expect it to work yet!**
-
 
 ## The Syntax
 
@@ -55,6 +53,12 @@ import { user, post } from './templates.html'
 ```
 
 `user` and `post` are the _elements_ exported by `templates.html`!
+
+
+## Understanding It
+
+For a deeper understanding of how HTML Exports works, take a look at
+[the annotated source](https://nevir.github.io/html-exports).
 
 
 ## Playing With It

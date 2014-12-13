@@ -1,3 +1,5 @@
+/* jshint -W098 */
+
 /**
  * @param {String...} fixturePaths The fixtures that should be imported. Tests
  *     will not run until they have all loaded.
@@ -11,13 +13,12 @@ function importFixtures() {
 
   var numToLoad = arguments.length
   var numLoaded = 0
-  for (var i = 0; i < arguments.length; i++) {
-    var path = arguments[i]
+  Array.prototype.forEach.call(arguments, function(path) {
     System.import('../fixtures/' + path, importOptions).then(function(mod) {
       fixtures[path.replace(/\..+$/, '')] = mod
       numLoaded = numLoaded + 1
     })
-  }
+  })
 
   // Wait until all the fixtures have loaded.
   before(function(done) {
@@ -30,3 +31,5 @@ function importFixtures() {
 
   return fixtures
 }
+
+/* jshint +W098 */

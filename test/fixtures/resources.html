@@ -1,7 +1,11 @@
 <span export id="sentinel">loaded</span>
 
 <script src="resources/script.js"></script>
-<link rel="stylesheet" href="resources/style-link.css">
-<style>
-@import "resources/style-import.css"
+
+<link export id="linkedstyle" rel="stylesheet" href="resources/style-link.css">
+
+<style export id="importedstyle">
+@import url("resources/style-import.css")
 </style>
+
+<link rel="import" href="resources/import.html">
