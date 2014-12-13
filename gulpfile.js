@@ -15,7 +15,14 @@ var MAIN_SOURCES = ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js']
 var PROJECT_ROOT = __dirname
 
 var BUILD_VARIATIONS = {
-  main: ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js'],
+  main: {
+    sources:  ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js'],
+    destBase: './dist/html-exports',
+  },
+  sysjs: {
+    sources:  ['src/loaderhooks.js'],
+    destBase: './dist/sysjs-plugin/html',
+  },
 }
 
 // Tasks
@@ -23,11 +30,10 @@ var BUILD_VARIATIONS = {
 require('web-component-tester').gulp.init(gulp);
 gulp.task('default', ['watch', 'build', 'test:style', 'doc'])
 gulp.task('test',    ['test:style', 'test:local'])
-gulp.task('build',   ['build:main'])
 
 gulp.task('watch', function() {
   watching = true
-  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:main:debug', 'doc'])
+  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:debug', 'doc'])
 })
 
 gulp.task('demo', ['build'], function() {
@@ -54,40 +60,44 @@ gulp.task('test:style', function() {
 
 // Build Variations
 
-_.each(BUILD_VARIATIONS, function(sources, name) {
+_.each(BUILD_VARIATIONS, function(config, name) {
   var targetBase = 'build:' + name
   function target(kind) {
     return targetBase + ':' + kind
   }
 
-  var destBase = 'html-exports'
-  if (name !== 'main') { destBase = destBase + '.' + name }
   function dest(kind) {
-    return destBase + (kind === 'release' ? '' : '.' + kind) + '.js'
+    return config.destBase + (kind === 'release' ? '' : '.' + kind) + '.js'
   }
 
   gulp.task(targetBase, [target('debug'), target('release'), target('min')])
 
   gulp.task(target('debug'), function() {
-    return gulp.src(sources)
+    return gulp.src(config.sources)
       .pipe(concat(dest('debug')))
-      .pipe(gulp.dest('./dist'))
+      .pipe(gulp.dest('.'))
   })
 
   gulp.task(target('release'), [target('debug')], function() {
-    return gulp.src(['./dist/' + dest('debug')])
+    return gulp.src([dest('debug')])
       .pipe(replace(/\n\s*console.(debug|assert)[^\n]+/g, ''))
       .pipe(rename(dest('release')))
-      .pipe(gulp.dest('./dist'))
+      .pipe(gulp.dest('.'))
   })
 
   gulp.task(target('min'), [target('release')], function() {
-    return gulp.src(['./dist/' + dest('release')])
+    return gulp.src([dest('release')])
       .pipe(uglify())
       .pipe(rename(dest('min')))
-      .pipe(gulp.dest('./dist'))
+      .pipe(gulp.dest('.'))
   })
 })
+
+var variations = _.keys(BUILD_VARIATIONS)
+gulp.task('build',         _.map(variations, function(v) { return 'build:' + v }))
+gulp.task('build:debug',   _.map(variations, function(v) { return 'build:' + v + ':debug' }))
+gulp.task('build:release', _.map(variations, function(v) { return 'build:' + v + ':release' }))
+gulp.task('build:min',     _.map(variations, function(v) { return 'build:' + v + ':min' }))
 
 // Pretty errors for our various tasks.
 
