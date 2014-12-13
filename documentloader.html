@@ -1,109 +1,39 @@
-<!DOCTYPE html><html lang="en"><head><title>documentloader</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="documentloader"><meta name="groc-project-path" content="src/documentloader.js"><meta name="groc-github-url" content="https://github.com/nevir/html-exports"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/nevir/html-exports/blob/master/src/documentloader.js">src/documentloader.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="documentloader">DocumentLoader</h1></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>HTMLExports.DocumentLoader</code> is a module loader that exposes <code>.html</code>
-documents as another valid module type that can be loaded.</p>
-<p>This loader attempts to adhere to the module loader spec as best it can.
-However, note that the spec was removed from the ES6 draft spec (with the
-intent to have a separate modules spec).</p></div></div><div class="code"><div class="wrapper">;(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope)</span> </span>{
+<!DOCTYPE html><html lang="en"><head><title>documentloader</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="documentloader"><meta name="groc-project-path" content="src/documentloader.js"><meta name="groc-github-url" content="https://github.com/nevir/html-exports"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/nevir/html-exports/blob/master/src/documentloader.js">src/documentloader.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="documentloader">DocumentLoader</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper">;(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope)</span> </span>{
 <span class="hljs-pi">  'use strict'</span>
 
-  scope.DocumentLoader = DocumentLoader
-
-  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">DocumentLoader</span><span class="hljs-params">(options, parentHooks)</span> </span>{
+  scope.DocumentLoader = DocumentLoader</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>HTMLExports.DocumentLoader</code> is a module loader that loads any modules with
+a <code>.html</code> extension as a HTML module. See <a href="loaderhooks.html"><code>HTMLExports.LoaderHooks</code></a>
+for the underlying behavior.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">DocumentLoader</span><span class="hljs-params">(options)</span> </span>{
     Reflect.Loader.call(<span class="hljs-keyword">this</span>, options || {})
-    <span class="hljs-keyword">this</span>._parentHooks = parentHooks || Reflect.Loader.prototype
   }
   DocumentLoader.prototype = <span class="hljs-built_in">Object</span>.create(Reflect.Loader.prototype)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-documentloader-mixin-"><code>DocumentLoader.mixin</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Rather than instantiating and managing a <code>DocumentLoader</code> directly, you
 will frequently want to mix <code>DocumentLoader</code>&#39;s behavior into an existing
-instance of <code>Reflect.Loader</code>.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-keyword">var</span> MIXIN_HOOKS = [<span class="hljs-string">'instantiate'</span>]</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The hooks defined on the loader instance will be overridden, and chained
-when operating on a resource that <code>DocumentLoader</code> doesn&#39;t understand.</p>
+loader.</p>
 <p>For example, to override the default system loader:</p>
 <pre><code class="lang-js">HTMLExports.DocumentLoader.mixin(System)</code></pre></div></div><div class="code"><div class="wrapper">  DocumentLoader.mixin = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">mixin</span><span class="hljs-params">(loader)</span> </span>{
     <span class="hljs-built_in">console</span>.debug(<span class="hljs-string">'DocumentLoader.mixin('</span>, loader, <span class="hljs-string">')'</span>)
-    <span class="hljs-keyword">var</span> parentHooks = {}
-    <span class="hljs-keyword">var</span> instance = <span class="hljs-keyword">new</span> <span class="hljs-keyword">this</span>({}, parentHooks)
-    MIXIN_HOOKS.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(hook)</span> </span>{
-      parentHooks[hook] = loader[hook].bind(loader)
-      loader[hook] = instance[hook].bind(instance)
-    })</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If the author is using es6-module-loader, make sure to set up <code>.html</code>
-URLs so that they are not assumed to be <code>.html.js</code>.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (loader.paths) {
+
+    <span class="hljs-built_in">Object</span>.keys(scope.LoaderHooks).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(hookName)</span> </span>{
+      <span class="hljs-built_in">console</span>.assert(hookName !== <span class="hljs-string">'normalize'</span>, <span class="hljs-string">'only supports hooks that accept a load record'</span>)
+
+      <span class="hljs-keyword">var</span> htmlHook   = scope.LoaderHooks[hookName]
+      <span class="hljs-keyword">var</span> parentHook = loader[hookName]
+      loader[hookName] = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(load)</span> </span>{
+        <span class="hljs-keyword">return</span> (_isHtml(load) ? htmlHook : parentHook).apply(<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>)
+      }
+    })</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If the author is using es6-module-loader or SystemJS, an entry is added
+to their <code>paths</code> property so that <code>.html</code> addresses are not resolved as
+<code>.html.js</code>.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (loader.paths) {
       loader.paths[<span class="hljs-string">'*.html'</span>] = <span class="hljs-string">'*.html'</span>
     }
-  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="loader-hooks">Loader Hooks</h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>For the most part, we leverage the behavior of <code>Reflect.Loader</code> to handle
-locating and fetching <code>.html</code> resources.</p>
-<p>While this does dramatically simplify the logic of <code>DocumentLoader</code>, it
-prevents us from using native machinery (i.e. HTML Imports). We can
-potentially hack around it, but it becomes awkward and brittle:</p>
-<ul>
-<li><p>The <code>fetch</code> hook expects a <code>String</code> to be returned, and load records
-assume that the <code>source</code> property is also a <code>String</code>. If we were to
-make use of HTML Imports, we get a <code>Document</code>, not a <code>String</code>.</p>
-<ul>
-<li>Note that this does work with the <a href="https://github.com/ModuleLoader/es6-module-loader">es6-module-loader polyfill</a>,
-but breaks <a href="https://github.com/systemjs/systemjs">System.js</a> (see the
-change where we <a href="https://github.com/nevir/html-exports/commit/48a61c762aebb4df52f858746ad9df64cd58de2d">convert away from using imports</a>).</li>
-</ul>
-</li>
-<li><p>Presumably, the only thing we gain from using (native) HTML Imports to
-fetch documents is prefetching and parallel parsing.</p>
-</li>
-</ul></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-documentloader-instantiate-"><code>DocumentLoader#instantiate</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>If the load record represents a HTML document, load it as a module.</p>
-<p>Declared (module) dependencies are extracted from the document&#39;s source,
-according to <a href="index.html#-htmlexports-depsfor-"><code>HTMLExports.depsFor</code></a>.
-Similarly, exports are determined via <a href="index.html#-htmlexports-exportsfor-"><code>HTMLExports.exportsFor</code></a>.</p>
-<p>For expected behavior of the hook, see sections 15.2.4.5.2 and 15.2.4.5.3
-of the <a href="http://wiki.ecmascript.org/doku.php?id=harmony:specification_drafts">Aug 24, 2014 ES6 spec draft</a>.</p></div></div><div class="code"><div class="wrapper">  DocumentLoader.prototype.instantiate = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">instantiate</span><span class="hljs-params">(load)</span> </span>{
-    <span class="hljs-keyword">if</span> (!<span class="hljs-keyword">this</span>._isHtml(load)) {
-      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._parentHooks.instantiate.apply(<span class="hljs-keyword">this</span>, <span class="hljs-built_in">arguments</span>)
-    }
-    <span class="hljs-built_in">console</span>.debug(<span class="hljs-string">'DocumentLoader#instantiate('</span>, load, <span class="hljs-string">')'</span>)
+  }
 
-    <span class="hljs-keyword">return</span> {
-      deps: scope.depsFor(load.source),
-      execute: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">executeHTMLDocument</span><span class="hljs-params">()</span> </span>{
-        <span class="hljs-comment">//- TODO(nevir): Ideally we'd be constructing/loading the doc async. And</span>
-        <span class="hljs-comment">//- we probably want to wait for the load event, too.</span>
-        <span class="hljs-comment">//-</span>
-        <span class="hljs-comment">//- See https://github.com/ModuleLoader/es6-module-loader/issues/263</span>
-        <span class="hljs-keyword">var</span> doc = <span class="hljs-keyword">this</span>._newDocument(load)
-        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.newModule(scope.exportsFor(doc))
-      }.bind(<span class="hljs-keyword">this</span>),
-    }
-  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="internal-implementation">Internal Implementation</h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>A load record can be determined to represent a HTML document via various
-hints and bits of metadata:</p></div></div><div class="code"><div class="wrapper">  DocumentLoader.prototype._isHtml = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">_isHtml</span><span class="hljs-params">(load)</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><ul>
-<li>An extension of <code>.html</code> is assumed to represent a HTML document.</li>
-</ul></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">var</span> path = load.address || load.name
-    <span class="hljs-keyword">if</span> (path &amp;&amp; path.slice(-<span class="hljs-number">5</span>) === <span class="hljs-string">'.html'</span>) {
-      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
-    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><ul>
-<li><code>Content-Type: text/html</code> is another hint, but not supported for now.</li>
-</ul></div></div><div class="code"><div class="wrapper">    <span class="hljs-comment">//- TODO(nevir): Coordinate with es6-module-loader/System.js to propagate</span>
-    <span class="hljs-comment">//- response headers through as load record metadata.</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><ul>
-<li>A document that begins with <code>&lt;</code> is similarly assumed to be HTML. This
-helps to cover cases where one&#39;s server is misconfigured.</li>
-</ul></div></div><div class="code"><div class="wrapper">    <span class="hljs-comment">//- Note the stupid basic UTF BOM detection.</span>
-    <span class="hljs-keyword">var</span> LOOKS_LIKE_HTML = <span class="hljs-regexp">/^([\x00\xBB\xBF\xEF\xFF\xFE]{2,4})?\s*&lt;/</span>
-    <span class="hljs-keyword">if</span> (load.source &amp;&amp; LOOKS_LIKE_HTML.test(load.source)) {
-      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>
-    }
-
-    <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>
-  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Because we cannot rely on HTML imports (native or polyfill) to construct
-the <code>Document</code> for us, it is left to us.</p>
-<p>This mostly follows the <a href="https://github.com/Polymer/HTMLImports/blob/master/src/importer.js#L121-147">HTML Imports polyfill</a>.</p></div></div><div class="code"><div class="wrapper">  DocumentLoader.prototype._newDocument = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">_newDocument</span><span class="hljs-params">(load)</span> </span>{
-    <span class="hljs-keyword">var</span> doc = <span class="hljs-built_in">document</span>.implementation.createHTMLDocument(<span class="hljs-string">'module: '</span> + load.name)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>The document is given a base URL via the <code>base</code> element...</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">var</span> base = doc.createElement(<span class="hljs-string">'base'</span>)
-    base.setAttribute(<span class="hljs-string">'href'</span>, load.address)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>... as well as the <code>baseURI</code> property (for IE support).</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (!doc.baseURI) {
-      doc.baseURI = load.address
-    }
-    doc.head.appendChild(base)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Additionally, we enforce that HTML modules are encoded as <code>UTF-8</code>. HTML
-Imports does this, so we assume that it is safe to carry over to modules.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">var</span> meta = doc.createElement(<span class="hljs-string">'meta'</span>)
-    meta.setAttribute(<span class="hljs-string">'charset'</span>, <span class="hljs-string">'utf-8'</span>)
-    doc.head.appendChild(meta)
-
-    doc.body.innerHTML = load.source</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Unfortunately, there is a little bit of work to support the polyfill for
-<code>&lt;template&gt;</code> elements.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">window</span>.HTMLTemplateElement &amp;&amp; HTMLTemplateElement.bootstrap) {
-      HTMLTemplateElement.bootstrap(doc)
-    }
-
-    <span class="hljs-keyword">return</span> doc
+  DocumentLoader.mixin(DocumentLoader.prototype)</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="internal-implementation">Internal Implementation</h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Any module with an extension of <code>.html</code> is assumed to represent a HTML
+document.</p>
+<p>We cannot perform any smarter heuristics (such as checking content type),
+as this check is performed before the <code>fetch</code> step completes.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">_isHtml</span><span class="hljs-params">(load)</span> </span>{
+    <span class="hljs-keyword">var</span> path = load.address || load.name
+    <span class="hljs-keyword">return</span> path &amp;&amp; path.slice(-<span class="hljs-number">5</span>) === <span class="hljs-string">'.html'</span>
   }
 
 })(<span class="hljs-keyword">this</span>.HTMLExports = <span class="hljs-keyword">this</span>.HTMLExports || {})</div></div></div></div></body></html>

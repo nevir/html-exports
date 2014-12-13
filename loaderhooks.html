@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><title>loaderhooks</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="loaderhooks"><meta name="groc-project-path" content="src/loaderhooks.js"><meta name="groc-github-url" content="https://github.com/nevir/html-exports"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/nevir/html-exports/blob/master/src/loaderhooks.js">src/loaderhooks.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="loaderhooks">LoaderHooks</h1></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p><code>HTMLExports.LoaderHooks</code> is a mixable map of loader hooks that provide the
+underlying behavior for loading HTML documents as modules.</p>
+<p>These hooks are designed to be consumed via various interfaces:</p>
+<ul>
+<li><p>They can be used directly as a <a href="https://github.com/systemjs/systemjs/wiki/Creating-a-Plugin">SystemJS plugin</a>.</p>
+</li>
+<li><p>They are indirectly mixed into <a href="documentloader.html"><code>DocumentLoader</code></a>.</p>
+</li>
+<li><p>They can be mixed into any existing loader via <a href="documentloader.html#-documentloader-mixin-"><code>DocumentLoader.mixin</code></a>.</p>
+</li>
+</ul></div></div><div class="code"><div class="wrapper">;(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope)</span> </span>{
+<span class="hljs-pi">  'use strict'</span>
+
+  <span class="hljs-keyword">var</span> LoaderHooks = {}
+  scope.LoaderHooks = LoaderHooks</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="-loaderhooks-fetch-"><code>LoaderHooks.fetch</code></h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Documents are fetched via a dynamic HTML import. This ensures that the
+document&#39;s linked resources (stylesheets, scripts, etc) are also properly
+loaded.</p>
+<p>The alternative would be for us to fetch document source and construct/load
+HTML documents ourselves. This becomes rather complex, and would end up
+duplicating much of the logic expressed by the HTML Imports polyfill.</p></div></div><div class="code"><div class="wrapper">  LoaderHooks.fetch = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">fetchHTML</span><span class="hljs-params">(load)</span> </span>{
+    <span class="hljs-built_in">console</span>.debug(<span class="hljs-string">'HTMLExports.LoaderHooks.fetch('</span>, load, <span class="hljs-string">')'</span>)
+
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Promise(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(resolve, reject)</span> </span>{
+      <span class="hljs-keyword">var</span> link = _newDynamicImport(load.address)
+
+      link.addEventListener(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+        reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Unknown failure when fetching URL: '</span> + load.address))
+      })</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>A downside of this approach is that the module loader asserts that
+module source is a string. Not to mention, userland loaders such as
+SystemJS tend to assume that the source is JavaScript.</p></div></div><div class="code"><div class="wrapper">      link.addEventListener(<span class="hljs-string">'load'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>To protect ourselves, and adhere to the spec as best we can, the
+real source is placed in the load record&#39;s <code>metadata</code> as a side
+channel.</p></div></div><div class="code"><div class="wrapper">        load.metadata.importedHTMLDocument = link.import</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>And then, to appease the spec/SystemJS, we provide a dummy value for
+<code>source</code>.</p></div></div><div class="code"><div class="wrapper">        resolve(<span class="hljs-string">''</span>)
+      })
+    })
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="-loaderhooks-instantiate-"><code>LoaderHooks.instantiate</code></h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Once we have a document fetched via HTML imports, we can extract the
+its dependencies and exported values.</p>
+<p>However, it is worth noting that we gain the same document semantics as
+HTML imports: stylesheets are merged into the root document, scripts
+evaluate globally, etc. Good for simplifying code, not great for scoping.</p>
+<p>Furthermore, imports are not considered loaded until all of their linked
+dependencies (stylesheets, scripts, etc) have also loaded. This makes
+prefetching declared module dependencies difficult/impossible.</p></div></div><div class="code"><div class="wrapper">  LoaderHooks.instantiate = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">instantiateHTML</span><span class="hljs-params">(load)</span> </span>{
+    <span class="hljs-built_in">console</span>.debug(<span class="hljs-string">'HTMLExports.LoaderHooks.instantiate('</span>, load, <span class="hljs-string">')'</span>)
+    <span class="hljs-keyword">var</span> doc = load.metadata.importedHTMLDocument
+    <span class="hljs-keyword">if</span> (!doc) {
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'HTMLExports bug: Expected fetched Document in metadata'</span>)
+    }
+
+    <span class="hljs-keyword">return</span> {
+      deps: scope.depsFor(doc),
+      execute: <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">executeHTML</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.newModule(scope.exportsFor(doc))
+      }.bind(<span class="hljs-keyword">this</span>),
+    }
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="document-processing">Document Processing</h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-htmlexports-depsfor-"><code>HTMLExports.depsFor</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>HTML modules can declare dependencies on any other modules via the <code>import</code>
+element:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"some-module"</span>&gt;</span></code></pre></div></div><div class="code"><div class="wrapper">  scope.depsFor = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">depsFor</span><span class="hljs-params">(document)</span> </span>{
+    <span class="hljs-keyword">var</span> declaredDependencies = <span class="hljs-built_in">document</span>.querySelectorAll(<span class="hljs-string">'import[src]'</span>)
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">Array</span>.prototype.map.call(declaredDependencies, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(importNode)</span> </span>{
+      <span class="hljs-keyword">return</span> importNode.getAttribute(<span class="hljs-string">'src'</span>)
+    })
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-htmlexports-exportsfor-"><code>HTMLExports.exportsFor</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>HTML modules can export elements that are tagged with <code>export</code>.</p></div></div><div class="code"><div class="wrapper">  scope.exportsFor = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">exportsFor</span><span class="hljs-params">(document)</span> </span>{
+    <span class="hljs-keyword">var</span> exports = {}</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>They can either be named elements (via <code>id</code>), such as:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">export</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"foo"</span>&gt;</span>...<span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span></code></pre></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">var</span> exportedNodes = <span class="hljs-built_in">document</span>.querySelectorAll(<span class="hljs-string">'[export][id]'</span>)
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, node; node = exportedNodes[i]; i++) {
+      exports[node.getAttribute(<span class="hljs-string">'id'</span>)] = node
+    }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Or they can be the default export when tagged with <code>default</code>:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">export</span> <span class="hljs-attribute">default</span>&gt;</span>...<span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span></code></pre></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">var</span> defaultNodes = <span class="hljs-built_in">document</span>.querySelectorAll(<span class="hljs-string">'[export][default]'</span>)
+    <span class="hljs-keyword">if</span> (defaultNodes.length &gt; <span class="hljs-number">1</span>) {
+      <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Only one default export is allowed per document'</span>)
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (defaultNodes.length === <span class="hljs-number">1</span>) {
+      exports.default = defaultNodes[<span class="hljs-number">0</span>]
+    }
+
+    <span class="hljs-keyword">return</span> exports
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="internal-implementation">Internal Implementation</h2></div></div></div><div class="segment"><div class="code"><div class="wrapper">  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">_newDynamicImport</span><span class="hljs-params">(address)</span> </span>{
+    <span class="hljs-keyword">var</span> link = <span class="hljs-built_in">document</span>.createElement(<span class="hljs-string">'link'</span>)
+    link.setAttribute(<span class="hljs-string">'rel'</span>, <span class="hljs-string">'import'</span>)
+    link.setAttribute(<span class="hljs-string">'href'</span>, address)
+    link.setAttribute(<span class="hljs-string">'module'</span>, <span class="hljs-string">''</span>)  <span class="hljs-comment">// Annotate the link for debugability.</span>
+
+    <span class="hljs-built_in">document</span>.head.appendChild(link)
+
+    <span class="hljs-keyword">return</span> link
+  }
+
+})(<span class="hljs-keyword">this</span>.HTMLExports = <span class="hljs-keyword">this</span>.HTMLExports || {})</div></div></div></div></body></html>

@@ -9,21 +9,135 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
       "type": "file",
       "data": {
         "language": {
-          "nameMatchers": [".js"],
-          "pygmentsLexer": "javascript",
-          "multiLineComment": ["/*", "*", "*/"],
-          "singleLineComment": ["//"],
-          "ignorePrefix": "}",
-          "foldPrefix": "^",
-          "name": "JavaScript"
+          "nameMatchers": [".md", ".markdown", ".mkd", ".mkdn", ".mdown"],
+          "commentsOnly": true,
+          "name": "Markdown"
         },
-        "sourcePath": "/Users/imac/work/projects/html-exports/src/base.js",
-        "projectPath": "src/base.js",
+        "sourcePath": "/Users/imac/work/projects/html-exports/README.md",
+        "projectPath": "README.md",
         "targetPath": "index",
         "pageTitle": "index",
-        "title": "index"
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "HTML Exports",
+            "slug": "html-exports",
+            "isFileHeader": true
+          },
+          "depth": 1,
+          "children": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "The Syntax",
+                "slug": "the-syntax"
+              },
+              "depth": 2,
+              "children": [
+                {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "Declaring Exports",
+                    "slug": "declaring-exports"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "Declaring Dependencies",
+                    "slug": "declaring-dependencies"
+                  },
+                  "depth": 3
+                }, {
+                  "type": "heading",
+                  "data": {
+                    "level": 3,
+                    "title": "Importing Via ES6",
+                    "slug": "importing-via-es6"
+                  },
+                  "depth": 3
+                }
+              ]
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Playing With It",
+                "slug": "playing-with-it"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Hacking On It",
+                "slug": "hacking-on-it"
+              },
+              "depth": 2
+            }
+          ]
+        },
+        "title": "HTML Exports"
       },
-      "depth": 1
+      "depth": 1,
+      "outline": [
+        {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "The Syntax",
+            "slug": "the-syntax"
+          },
+          "depth": 2,
+          "children": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 3,
+                "title": "Declaring Exports",
+                "slug": "declaring-exports"
+              },
+              "depth": 3
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 3,
+                "title": "Declaring Dependencies",
+                "slug": "declaring-dependencies"
+              },
+              "depth": 3
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 3,
+                "title": "Importing Via ES6",
+                "slug": "importing-via-es6"
+              },
+              "depth": 3
+            }
+          ]
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Playing With It",
+            "slug": "playing-with-it"
+          },
+          "depth": 2
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Hacking On It",
+            "slug": "hacking-on-it"
+          },
+          "depth": 2
+        }
+      ]
     }, {
       "type": "file",
       "data": {
@@ -40,9 +154,108 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         "projectPath": "src/documentloader.js",
         "targetPath": "documentloader",
         "pageTitle": "documentloader",
-        "title": "documentloader"
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "DocumentLoader",
+            "slug": "documentloader",
+            "isFileHeader": true
+          },
+          "depth": 1,
+          "children": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Internal Implementation",
+                "slug": "internal-implementation"
+              },
+              "depth": 2
+            }
+          ]
+        },
+        "title": "DocumentLoader"
       },
-      "depth": 1
+      "depth": 1,
+      "outline": [
+        {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Internal Implementation",
+            "slug": "internal-implementation"
+          },
+          "depth": 2
+        }
+      ]
+    }, {
+      "type": "file",
+      "data": {
+        "language": {
+          "nameMatchers": [".js"],
+          "pygmentsLexer": "javascript",
+          "multiLineComment": ["/*", "*", "*/"],
+          "singleLineComment": ["//"],
+          "ignorePrefix": "}",
+          "foldPrefix": "^",
+          "name": "JavaScript"
+        },
+        "sourcePath": "/Users/imac/work/projects/html-exports/src/loaderhooks.js",
+        "projectPath": "src/loaderhooks.js",
+        "targetPath": "loaderhooks",
+        "pageTitle": "loaderhooks",
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "LoaderHooks",
+            "slug": "loaderhooks",
+            "isFileHeader": true
+          },
+          "depth": 1,
+          "children": [
+            {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Document Processing",
+                "slug": "document-processing"
+              },
+              "depth": 2
+            }, {
+              "type": "heading",
+              "data": {
+                "level": 2,
+                "title": "Internal Implementation",
+                "slug": "internal-implementation"
+              },
+              "depth": 2
+            }
+          ]
+        },
+        "title": "LoaderHooks"
+      },
+      "depth": 1,
+      "outline": [
+        {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Document Processing",
+            "slug": "document-processing"
+          },
+          "depth": 2
+        }, {
+          "type": "heading",
+          "data": {
+            "level": 2,
+            "title": "Internal Implementation",
+            "slug": "internal-implementation"
+          },
+          "depth": 2
+        }
+      ]
     }, {
       "type": "file",
       "data": {
@@ -59,9 +272,20 @@ f.event={add:function(a,c,d,e,g){var h,i,j,k,l,m,n,o,p,q,r,s;if(!(a.nodeType===3
         "projectPath": "src/system.js",
         "targetPath": "system",
         "pageTitle": "system",
-        "title": "system"
+        "firstHeader": {
+          "type": "heading",
+          "data": {
+            "level": 1,
+            "title": "Global Behavior",
+            "slug": "global-behavior",
+            "isFileHeader": true
+          },
+          "depth": 1
+        },
+        "title": "Global Behavior"
       },
-      "depth": 1
+      "depth": 1,
+      "outline": []
     }
   ];
 

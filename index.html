@@ -1,14 +1,31 @@
-<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="src/base.js"><meta name="groc-github-url" content="https://github.com/nevir/html-exports"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/nevir/html-exports/blob/master/src/base.js">src/base.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="htmlexports">HTMLExports</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper">;(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope)</span> </span>{
-<span class="hljs-pi">  'use strict'</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-htmlexports-depsfor-"><code>HTMLExports.depsFor</code></h3></div></div><div class="code"><div class="wrapper">  scope.depsFor = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">depsFor</span><span class="hljs-params">(source)</span> </span>{
-    <span class="hljs-keyword">return</span> []
-  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-htmlexports-exportsfor-"><code>HTMLExports.exportsFor</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>TODO(nevir)</p></div></div><div class="code"><div class="wrapper">  scope.exportsFor = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">exportsFor</span><span class="hljs-params">(document)</span> </span>{
-    <span class="hljs-keyword">var</span> exports = {}
-    <span class="hljs-keyword">var</span> exportedNodes = <span class="hljs-built_in">document</span>.querySelectorAll(<span class="hljs-string">'[id][export]'</span>)
-    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, node; node = exportedNodes[i]; i++) {
-      exports[node.getAttribute(<span class="hljs-string">'id'</span>)] = node
-    }
-
-    <span class="hljs-keyword">return</span> exports
-  }
-
-})(<span class="hljs-keyword">this</span>.HTMLExports = <span class="hljs-keyword">this</span>.HTMLExports || {})</div></div></div></div></body></html>
+<!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><meta name="groc-github-url" content="https://github.com/nevir/html-exports"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/nevir/html-exports/blob/master/README.md">README.md</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="html-exports">HTML Exports</h1>
+<p>Why let JavaScript have all the fun? HTML documents can be modules too!</p>
+<p><strong>This is a work in progress. Do not expect it to work yet!</strong></p>
+<h2 id="the-syntax">The Syntax</h2>
+<h3 id="declaring-exports">Declaring Exports</h3>
+<p>Just like ES6 modules, you can choose particular values to export from a HTML 
+document. Simply place an <code>export</code> attribute on any element with that you wish
+to export:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">export</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"user"</span>&gt;</span>...<span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span></code></pre>
+<p>You can also declare the default export of the document by tagging an element
+with <code>default</code> (<code>id</code> is optional).</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">section</span> <span class="hljs-attribute">export</span> <span class="hljs-attribute">default</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"post"</span>&gt;</span>...<span class="hljs-tag">&lt;/<span class="hljs-title">section</span>&gt;</span></code></pre>
+<p>If you don&#39;t declare a default export, the document is exported.</p>
+<h3 id="declaring-dependencies">Declaring Dependencies</h3>
+<p>You can also declare dependencies on other modules from HTML.</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span>/&gt;</span></code></pre>
+<p>TODO(nevir): Figure out document scoping of imported values, and more advanced
+examples of importing via HTML. I.e.:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span> <span class="hljs-attribute">as</span>=<span class="hljs-value">"$"</span>/&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"./templates.html"</span> <span class="hljs-attribute">values</span>=<span class="hljs-value">"user post"</span>/&gt;</span></code></pre>
+<p>etc.</p>
+<h3 id="importing-via-es6">Importing Via ES6</h3>
+<p>Just treat a HTML module as you would any other module:</p>
+<pre><code>import { user, post } from &#39;./templates.html&#39;</code></pre>
+<p><code>user</code> and <code>post</code> are the <em>elements</em> exported by <code>templates.html</code>!</p>
+<h2 id="playing-with-it">Playing With It</h2>
+<p>Try out the demo:</p>
+<pre><code class="lang-sh">gulp demo</code></pre>
+<h2 id="hacking-on-it">Hacking On It</h2>
+<p>Run this in the background for continuous testing/building:</p>
+<pre><code class="lang-sh">gulp</code></pre></div></div></div></div></body></html>
