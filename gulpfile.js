@@ -17,11 +17,11 @@ var PROJECT_ROOT = __dirname
 require('web-component-tester').gulp.init(gulp);
 gulp.task('default', ['watch', 'build', 'test:style', 'doc'])
 gulp.task('test',    ['test:style', 'test:local'])
-gulp.task('build',   ['build:dev', 'build:main'])
+gulp.task('build',   ['build:main'])
 
 gulp.task('watch', function() {
   watching = true
-  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:main', 'doc'])
+  return gulp.watch(ALL_SOURCES, {debounceDelay: 10}, ['test:style', 'build:main:debug', 'doc'])
 })
 
 gulp.task('demo', ['build'], function() {
@@ -37,21 +37,6 @@ gulp.task('doc', ['build:main'], function() {
     .pipe(groc())
 })
 
-// As much as I'd like to use ES6 for the source, and just transpile it, the
-// Traceur runtime is too much overhead for a simple "shim" like this.
-gulp.task('build:dev', function() {
-  return gulp.src(MAIN_SOURCES)
-    .pipe(concat('html-exports.dev.js'))
-    .pipe(gulp.dest('./dist'))
-})
-
-gulp.task('build:main', ['build:dev'], function() {
-  return gulp.src(['./dist/html-exports.dev.js'])
-    .pipe(replace(/\n\s*console.(debug|assert)[^\n]+/g, ''))
-    .pipe(rename('html-exports.js'))
-    .pipe(gulp.dest('./dist'))
-})
-
 gulp.task('test:style', function() {
   return gulp.src(ALL_SOURCES)
     .pipe(jshint.extract('auto'))
@@ -60,6 +45,24 @@ gulp.task('test:style', function() {
     .pipe(jshint.reporter('fail'))
     .on('error', onError)
 })
+
+// Build Variations
+
+gulp.task('build:main', ['build:main:debug', 'build:main:release'])
+
+gulp.task('build:main:debug', function() {
+  return gulp.src(MAIN_SOURCES)
+    .pipe(concat('html-exports.debug.js'))
+    .pipe(gulp.dest('./dist'))
+})
+
+gulp.task('build:main:release', ['build:main:debug'], function() {
+  return gulp.src(['./dist/html-exports.debug.js'])
+    .pipe(replace(/\n\s*console.(debug|assert)[^\n]+/g, ''))
+    .pipe(rename('html-exports.js'))
+    .pipe(gulp.dest('./dist'))
+})
+
 
 // Pretty errors for our various tasks.
 
