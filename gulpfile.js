@@ -6,6 +6,7 @@ var notify    = require('gulp-notify')
 var path      = require('path')
 var rename    = require('gulp-rename')
 var replace   = require('gulp-replace')
+var uglify    = require('gulp-uglify')
 var webserver = require('gulp-webserver')
 
 var ALL_SOURCES  = ['gulpfile.js', '{demo,src,test}/**/*.{html,js}']
@@ -48,7 +49,7 @@ gulp.task('test:style', function() {
 
 // Build Variations
 
-gulp.task('build:main', ['build:main:debug', 'build:main:release'])
+gulp.task('build:main', ['build:main:debug', 'build:main:release', 'build:main:min'])
 
 gulp.task('build:main:debug', function() {
   return gulp.src(MAIN_SOURCES)
@@ -63,6 +64,12 @@ gulp.task('build:main:release', ['build:main:debug'], function() {
     .pipe(gulp.dest('./dist'))
 })
 
+gulp.task('build:main:min', ['build:main:release'], function() {
+  return gulp.src(['./dist/html-exports.js'])
+    .pipe(uglify())
+    .pipe(rename('html-exports.min.js'))
+    .pipe(gulp.dest('./dist'))
+})
 
 // Pretty errors for our various tasks.
 
