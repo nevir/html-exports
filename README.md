@@ -47,8 +47,8 @@ import { user, post } from './templates.html'
 
 ## Using It
 
-Include [`html-exports.min.js`](dist/) in your page, after loading
-[es6-module-loader](https://github.com/ModuleLoader/es6-module-loader):
+Include [`html-exports.min.js`](dist/) (~0.8KB gzipped) in your page, after 
+loading [es6-module-loader](https://github.com/ModuleLoader/es6-module-loader):
 
 ```html
 <script src="es6-module-loader.js"></script>
