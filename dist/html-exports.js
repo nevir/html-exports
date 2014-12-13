@@ -118,6 +118,9 @@
       throw new Error('Only one default export is allowed per document')
     } else if (defaultNodes.length === 1) {
       exports.default = defaultNodes[0]
+    // Otherwise, the default export will be the document.
+    } else {
+      exports.default = document
     }
 
     return exports

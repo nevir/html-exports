@@ -10,21 +10,31 @@
 </head>
 <body>
   <script>
-    var fixtures = importFixtures('words.html');
+    var fixtures = importFixtures('words.html', 'simpledefault.html', 'nameddefault.html')
 
     // Yay, tautology!
     specify('exported elements are exported', function() {
-      expect(fixtures.words.one.textContent).to.eq('Lorem')
-      expect(fixtures.words.two.textContent).to.eq('ipsum')
+      expect(fixtures.words.one.textContent).to.equal('Lorem')
+      expect(fixtures.words.two.textContent).to.equal('ipsum')
     })
 
     specify('elements with just an id are not exported', function() {
-      expect(fixtures.words.three).to.eq(undefined)
+      expect(fixtures.words.three).to.equal(undefined)
     })
 
-    specify('the document is the default default export')
+    specify('the document is the default default export', function() {
+      expect(fixtures.words.default).to.be.an.instanceOf(Document)
+      expect(fixtures.words.default.URL).to.match(/fixtures\/words\.html/)
+    })
 
-    specify('default exports can be declared')
+    specify('default exports can be declared without an id', function() {
+      expect(fixtures.simpledefault.default.textContent).to.equal('fizz')
+    })
+
+    specify('default exports can be declared with an id', function() {
+      expect(fixtures.nameddefault.foo).to.equal(fixtures.nameddefault.default)
+      expect(fixtures.nameddefault.default.textContent).to.equal('bar')
+    })
 
     specify('values can be exported from <script>')
 
