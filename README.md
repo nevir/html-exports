@@ -44,7 +44,7 @@ examples of importing via HTML. I.e.:
 etc.
 
 
-### Importing Via ES6 
+### Importing HTML Modules Via ES6 
 
 Just treat a HTML module as you would any other module:
 
@@ -55,10 +55,34 @@ import { user, post } from './templates.html'
 `user` and `post` are the _elements_ exported by `templates.html`!
 
 
-## Understanding It
+## Using It
 
-For a deeper understanding of how HTML Exports works, take a look at
-[the annotated source](https://nevir.github.io/html-exports).
+Include [`html-exports.min.js`](dist/) in your page, after loading
+[es6-module-loader](https://github.com/ModuleLoader/es6-module-loader):
+
+```html
+<script src="es6-module-loader.js"></script>
+<script src="html-exports.min.js"></script>
+```
+
+This gives you the default behavior where any module with a `.html` extension
+is treated as a HTML module.
+
+
+### SystemJS
+
+Alternatively, you can use the SystemJS plugin by grabbing
+[a build](dist/sysjs-plugin) of it, renaming your build to `html.js` and
+placing that build somewhere on your load path for SystemJS to discover.
+
+You can then load HTML modules via:
+
+```js
+// Implicit plugin name
+import { user, post } from './templates.html!'
+// Or explicit plugin name:
+import { user, post } from './templates.html!html'
+```
 
 
 ## Playing With It
@@ -77,3 +101,9 @@ Run this in the background for continuous testing/building:
 ```sh
 gulp
 ```
+
+
+## Understanding It
+
+For a deeper understanding of how HTML Exports works, take a look at
+[the annotated source](https://nevir.github.io/html-exports).
