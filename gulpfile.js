@@ -1,3 +1,4 @@
+var _         = require('lodash')
 var concat    = require('gulp-concat')
 var groc      = require('gulp-groc')
 var gulp      = require('gulp')
@@ -12,6 +13,10 @@ var webserver = require('gulp-webserver')
 var ALL_SOURCES  = ['gulpfile.js', '{demo,src,test}/**/*.{html,js}']
 var MAIN_SOURCES = ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js']
 var PROJECT_ROOT = __dirname
+
+var BUILD_VARIATIONS = {
+  main: ['src/loaderhooks.js', 'src/**/*.js', 'src/system.js'],
+}
 
 // Tasks
 
@@ -49,26 +54,39 @@ gulp.task('test:style', function() {
 
 // Build Variations
 
-gulp.task('build:main', ['build:main:debug', 'build:main:release', 'build:main:min'])
+_.each(BUILD_VARIATIONS, function(sources, name) {
+  var targetBase = 'build:' + name
+  function target(kind) {
+    return targetBase + ':' + kind
+  }
 
-gulp.task('build:main:debug', function() {
-  return gulp.src(MAIN_SOURCES)
-    .pipe(concat('html-exports.debug.js'))
-    .pipe(gulp.dest('./dist'))
-})
+  var destBase = 'html-exports'
+  if (name !== 'main') { destBase = destBase + '.' + name }
+  function dest(kind) {
+    return destBase + (kind === 'release' ? '' : '.' + kind) + '.js'
+  }
 
-gulp.task('build:main:release', ['build:main:debug'], function() {
-  return gulp.src(['./dist/html-exports.debug.js'])
-    .pipe(replace(/\n\s*console.(debug|assert)[^\n]+/g, ''))
-    .pipe(rename('html-exports.js'))
-    .pipe(gulp.dest('./dist'))
-})
+  gulp.task(targetBase, [target('debug'), target('release'), target('min')])
 
-gulp.task('build:main:min', ['build:main:release'], function() {
-  return gulp.src(['./dist/html-exports.js'])
-    .pipe(uglify())
-    .pipe(rename('html-exports.min.js'))
-    .pipe(gulp.dest('./dist'))
+  gulp.task(target('debug'), function() {
+    return gulp.src(sources)
+      .pipe(concat(dest('debug')))
+      .pipe(gulp.dest('./dist'))
+  })
+
+  gulp.task(target('release'), [target('debug')], function() {
+    return gulp.src(['./dist/' + dest('debug')])
+      .pipe(replace(/\n\s*console.(debug|assert)[^\n]+/g, ''))
+      .pipe(rename(dest('release')))
+      .pipe(gulp.dest('./dist'))
+  })
+
+  gulp.task(target('min'), [target('release')], function() {
+    return gulp.src(['./dist/' + dest('release')])
+      .pipe(uglify())
+      .pipe(rename(dest('min')))
+      .pipe(gulp.dest('./dist'))
+  })
 })
 
 // Pretty errors for our various tasks.

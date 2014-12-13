@@ -13,6 +13,7 @@
     "gulp-webserver": "^0.8.7",
     "jshint-stylish": "^1.0.0",
     "lazypipe": "^0.2.2",
+    "lodash": "^2.4.1",
     "systemjs": "^0.10.1",
     "traceur": "0.0.74",
     "web-component-tester": "^2.0.2",
