@@ -2,6 +2,8 @@
 
 Why let JavaScript have all the fun? HTML documents can be modules too!
 
+**I'm still playing with the syntax and behavior; expect things to change.**
+
 
 ## The Syntax
 
