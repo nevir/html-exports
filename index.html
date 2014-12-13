@@ -18,8 +18,8 @@ with <code>default</code> (<code>id</code> is optional).</p>
 <pre><code>import { user, post } from &#39;./templates.html&#39;</code></pre>
 <p><code>user</code> and <code>post</code> are the <em>elements</em> exported by <code>templates.html</code>!</p>
 <h2 id="using-it">Using It</h2>
-<p>Include <a href="dist/"><code>html-exports.min.js</code></a> in your page, after loading
-<a href="https://github.com/ModuleLoader/es6-module-loader">es6-module-loader</a>:</p>
+<p>Include <a href="dist/"><code>html-exports.min.js</code></a> (~0.8KB gzipped) in your page, after 
+loading <a href="https://github.com/ModuleLoader/es6-module-loader">es6-module-loader</a>:</p>
 <pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"es6-module-loader.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span>
 <span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"html-exports.min.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span></code></pre>
 <p>This gives you the default behavior where any module with a <code>.html</code> extension
