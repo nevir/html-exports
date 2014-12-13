@@ -13,11 +13,6 @@ with <code>default</code> (<code>id</code> is optional).</p>
 <h3 id="declaring-dependencies">Declaring Dependencies</h3>
 <p>You can also declare dependencies on other modules from HTML.</p>
 <pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span>/&gt;</span></code></pre>
-<p>TODO(nevir): Figure out document scoping of imported values, and more advanced
-examples of importing via HTML. I.e.:</p>
-<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span> <span class="hljs-attribute">as</span>=<span class="hljs-value">"$"</span>/&gt;</span>
-<span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"./templates.html"</span> <span class="hljs-attribute">values</span>=<span class="hljs-value">"user post"</span>/&gt;</span></code></pre>
-<p>etc.</p>
 <h3 id="importing-html-modules-via-es6">Importing HTML Modules Via ES6</h3>
 <p>Just treat a HTML module as you would any other module:</p>
 <pre><code>import { user, post } from &#39;./templates.html&#39;</code></pre>
