@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <script src="../../node_modules/webcomponents.js/webcomponents.js"></script>
   <script src="../../node_modules/web-component-tester/browser.js"></script>
-  <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.src.js"></script>
-  <script src="../../node_modules/systemjs/dist/system.src.js"></script>
+  <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.js"></script>
+  <script src="../../node_modules/systemjs/dist/system.js"></script>
 </head>
 <body>
   <script>
-    System.paths.html = '../../dist/sysjs-plugin/html.debug.js'
+    System.paths.html = '../../dist/sysjs-plugin/html.min.js'
 
     specify('Works with implicit plugin names', function(done) {
       // Some combination of SystemJS and es6-module-loader's pathing makes
