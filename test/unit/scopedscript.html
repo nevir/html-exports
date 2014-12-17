@@ -23,9 +23,6 @@
     _scopedScript.bar     = bar
     _scopedScript.baz     = baz
   </script>
-  <script type="module">
-    // _scopedModule.MegaFoo = MegaFoo
-  </script>
 
   <script>
     var fixtures = importFixtures('scoped.html')
@@ -62,10 +59,6 @@
 
     describe('<script type="scoped"> in an import', function() {
       scopedTagCommon(_importedScript)
-    })
-
-    describe.skip('<script type="module">', function() {
-      scopedTagCommon(_scopedModule)
     })
   </script>
 </body>
