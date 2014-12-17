@@ -98,6 +98,18 @@ Include [`html-exports.min.js`](dist/) (~0.8KB gzipped) in your page, after load
 This gives you the default behavior where any module with a `.html` extension is treated as a HTML module.
 
 
+### Compatibility
+
+This library currently supports IE9+ and evergreen browsers.
+
+For browsers that do not support HTML imports (i.e. everything but Chrome), you will need to [polyfill it](https://github.com/webcomponents/webcomponentsjs):
+
+```html
+<script src="HTMLImports.min.js"></script>
+<script src="html-exports.min.js"></script>
+```
+
+
 ### SystemJS
 
 Alternatively, you can use the SystemJS plugin by grabbing [a build](dist/sysjs-plugin) of it, renaming your build to `html.js` and placing that build somewhere on your load path for SystemJS to discover.
