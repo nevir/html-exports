@@ -1,0 +1,72 @@
+<!DOCTYPE html><html lang="en"><head><title>scopedscript</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="scopedscript"><meta name="groc-project-path" content="src/scopedscript.js"><meta name="groc-github-url" content="https://github.com/nevir/html-exports"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/nevir/html-exports/blob/master/src/scopedscript.js">src/scopedscript.js</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="scoped-scripts">Scoped Scripts</h1></div></div></div><div class="segment"><div class="code"><div class="wrapper">;(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope)</span> </span>{
+<span class="hljs-pi">  'use strict'</span></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h3 id="-htmlexports-runscopedscripts-"><code>HTMLExports.runScopedScripts</code></h3></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Processes any scoped scripts, and executes them after all declared imports
+within a document have loaded.</p></div></div><div class="code"><div class="wrapper">  scope.runScopedScripts = <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">runScopedScripts</span><span class="hljs-params">(document)</span> </span>{
+    <span class="hljs-keyword">var</span> deps     = scope.depsFor(<span class="hljs-built_in">document</span>)
+    <span class="hljs-keyword">var</span> options  = {name: <span class="hljs-built_in">document</span>.location.pathname}
+    <span class="hljs-keyword">var</span> promises = deps.map(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(dep)</span> </span>{
+      <span class="hljs-keyword">return</span> System.import(dep.name, options)
+    })
+    Promise.all(promises).then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(allExports)</span> </span>{
+      <span class="hljs-keyword">var</span> exportMap = _flattenExports(allExports, deps)
+      <span class="hljs-built_in">document</span>.dispatchEvent(<span class="hljs-keyword">new</span> CustomEvent(<span class="hljs-string">'DeclaredImportsLoaded'</span>, {detail: {
+        exportMap:    exportMap,
+        dependencies: deps,
+      }}))</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>A scoped script can be declared as:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"scoped"</span>&gt;</span><span class="javascript">...</span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span></code></pre></div></div><div class="code"><div class="wrapper">      <span class="hljs-keyword">var</span> scripts   = <span class="hljs-built_in">document</span>.querySelectorAll(<span class="hljs-string">'script[type="scoped"]'</span>)
+      <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>; i &lt; scripts.length; i++) {
+        _executeScript(exportMap, scripts[i])
+      }
+    })
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="internal-implementation">Internal Implementation</h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>After we have loaded all the declared imports for a particular document,
+we need to flatten the imported values into a set of (aliased) keys and
+their values.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">_flattenExports</span><span class="hljs-params">(allExports, deps)</span> </span>{
+    <span class="hljs-built_in">console</span>.assert(allExports.length === deps.length, <span class="hljs-string">'declared dependencies do not match loaded exports'</span>)
+    <span class="hljs-keyword">var</span> exportMap = {}
+    <span class="hljs-keyword">var</span> masked    = []
+
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> i = <span class="hljs-number">0</span>, dep; dep = deps[i]; i++) {
+      <span class="hljs-built_in">Object</span>.keys(dep.aliases).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(source)</span> </span>{
+        <span class="hljs-keyword">var</span> target = dep.aliases[source]</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>It is entirely possible for multiple import declarations to attempt
+to write to the same key. We&#39;ll mark those, so that we can warn about
+them at the end of te flattening process.</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">if</span> (target <span class="hljs-keyword">in</span> exportMap) { masked.push(target) }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Similarly, it is possible for a declared import to request a value
+that wasn&#39;t actually imported. We want to warn about that, too.</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">if</span> (!(source <span class="hljs-keyword">in</span> allExports[i])) {
+          <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">'"'</span> + source + <span class="hljs-string">'" was requested, but not exported from "'</span> + dep.name + <span class="hljs-string">'".'</span>, dep.source)
+        }
+        exportMap[target] = allExports[i][source]
+      })
+    }
+
+    <span class="hljs-keyword">if</span> (masked.length) {
+      masked.forEach(_warnMaskedImports.bind(<span class="hljs-literal">null</span>, allExports, deps))
+    }
+
+    <span class="hljs-keyword">return</span> exportMap
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>It&#39;s important that we give authors as much info as possible to diagnose
+any problems with their source. So, we spend a bit of computational effort
+whenever imports are masked to let the author know where the conflicts
+originate.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">_warnMaskedImports</span><span class="hljs-params">(allExports, deps, name)</span> </span>{
+    <span class="hljs-keyword">var</span> conflicting = deps.filter(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(dep)</span> </span>{
+      <span class="hljs-keyword">return</span> dep.aliases
+    }).map(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(dep)</span> </span>{
+      <span class="hljs-keyword">return</span> dep.source
+    })
+    <span class="hljs-built_in">console</span>.warn(<span class="hljs-string">'Multiple values named "'</span> + name + <span class="hljs-string">'" were requested by imports:'</span>, conflicting)
+  }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>After all the imported values are flattened and validated, it is time to
+execute the scoped scripts within the document.</p></div></div><div class="code"><div class="wrapper">  <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-title">_executeScript</span><span class="hljs-params">(exportMap, script)</span> </span>{
+    <span class="hljs-built_in">console</span>.debug(<span class="hljs-string">'executing scoped script'</span>, script, <span class="hljs-string">'scoped imports:'</span>, exportMap)
+    <span class="hljs-keyword">var</span> keys   = <span class="hljs-built_in">Object</span>.keys(exportMap)
+    <span class="hljs-keyword">var</span> values = keys.map(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(k)</span> </span>{ <span class="hljs-keyword">return</span> exportMap[k] })</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Scoped scripts are evaluated in strict mode. It&#39;s the future!</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">var</span> source = <span class="hljs-string">'"use strict";\n'</span> + script.textContent</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Currently, each script gets its own closure that includes any scoped
+values imported by the document&#39;s declare imports. This also acts as a
+convenient sandbox for scripts.</p></div></div><div class="code"><div class="wrapper">    <span class="hljs-keyword">try</span> {
+      <span class="hljs-keyword">var</span> func = <span class="hljs-built_in">Function</span>.apply(<span class="hljs-literal">null</span>, keys.concat([source]))
+      func.apply(<span class="hljs-literal">null</span>, values)
+    } <span class="hljs-keyword">catch</span> (error) {
+      <span class="hljs-built_in">console</span>.error(
+        <span class="hljs-string">'Failure executing scoped script:'</span>, error.message, <span class="hljs-string">'\n'</span>,
+        <span class="hljs-string">'Imported values:'</span>, exportMap, <span class="hljs-string">'\n'</span>,
+        <span class="hljs-string">'Script body:'</span>, source, <span class="hljs-string">'\n'</span>)
+      <span class="hljs-keyword">throw</span> error
+    }
+  }
+
+})(<span class="hljs-keyword">this</span>.HTMLExports = <span class="hljs-keyword">this</span>.HTMLExports || {})</div></div></div></div></body></html>
