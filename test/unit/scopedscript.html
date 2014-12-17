@@ -9,7 +9,7 @@
   <script src="../../dist/html-exports.min.js"></script>
   <script src="../shared/fixtures.js"></script>
 
-  <import src="../fixtures/foo" as="MegaFoo" values="bar">
+  <import src="../fixtures/foo" as="MegaFoo" values="bar baz">
 </head>
 <body>
   <script>
@@ -20,6 +20,7 @@
   <script type="scoped">
     _scopedScript.MegaFoo = MegaFoo
     _scopedScript.bar     = bar
+    _scopedScript.baz     = baz
   </script>
   <script type="module">
     // _scopedModule.MegaFoo = MegaFoo
@@ -48,6 +49,7 @@
 
       specify('pulls named imports', function() {
         expect(values.bar).to.equal('I am Foo Bar')
+        expect(values.baz).to.equal('I am Foo Baz')
       })
 
       specify('pulls renamed imports')
