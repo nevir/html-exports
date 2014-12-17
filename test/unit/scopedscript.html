@@ -9,11 +9,7 @@
   <script src="../../dist/html-exports.min.js"></script>
   <script src="../shared/fixtures.js"></script>
 
-  <!--
-  We'd like to ../fixtures/foo, but that's broken. See:
-  https://github.com/ModuleLoader/es6-module-loader/issues/255
-  -->
-  <import src="scopedscript/foo" as="MegaFoo" values="bar">
+  <import src="../fixtures/foo" as="MegaFoo" values="bar">
 </head>
 <body>
   <script>
@@ -30,18 +26,17 @@
   </script>
 
   <script>
-    // var fixtures = importFixtures('scoped.html')
+    var fixtures = importFixtures('scoped.html')
 
     var importsLoaded = new Promise(function(resolve, reject) {
       document.addEventListener('DeclaredImportsLoaded', resolve)
     })
-
     // Both test that the event fires, and block subsequent tests from running
     // until it does.
     specify('DeclaredImportsLoaded fires when imports have loaded', function(done) {
       importsLoaded.then(function(event) {
         var imported = event.detail.dependencies.map(function(d) { return d.name })
-        expect(imported).to.have.members(['scopedscript/foo'])
+        expect(imported).to.have.members(['../fixtures/foo'])
         done()
       })
     })

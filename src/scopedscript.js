@@ -9,8 +9,9 @@
   // within a document have loaded.
   scope.runScopedScripts = function runScopedScripts(document) {
     var deps     = scope.depsFor(document)
+    var options  = {name: document.location.pathname}
     var promises = deps.map(function(dep) {
-      return System.import(dep.name)
+      return System.import(dep.name, options)
     })
     Promise.all(promises).then(function(allExports) {
       var exportMap = _flattenExports(allExports, deps)
