@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>HTML Exports!</title>
+
+  <!-- The polyfill, and dependencies. -->
+  <script src="../../node_modules/traceur/bin/traceur.js"></script>
+  <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.js"></script>
+  <script src="../../node_modules/systemjs/dist/system.js"></script>
+  <script src="../../dist/html-exports.debug.js"></script>
+
+  <!-- Declared dependencies in HTML! -->
+  <import src="./awesomesauce" as="doAwesomeThings">
+
+  <script type="scoped">
+    var button = document.createElement('button')
+    button.textContent = 'Awesome from <script type="scoped">'
+    button.addEventListener('click', doAwesomeThings)
+    document.body.appendChild(button)
+  </script>
+</head>
+<body>
+  <h1>HTML Exports Scoped Scripts Demo</h1>
+</body>
+</html>

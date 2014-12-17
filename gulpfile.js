@@ -39,7 +39,7 @@ gulp.task('demo', ['build'], function() {
   return gulp.src('.')
     .pipe(webserver({
       livereload: true,
-      open:       '/demo/custom-element',
+      open:       '/demo/',
     }))
 })
 
