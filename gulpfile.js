@@ -15,7 +15,7 @@ var PROJECT_ROOT = __dirname
 
 var BUILD_VARIATIONS = {
   main: {
-    sources:  ['src/loaderhooks.js', 'src/documentloader.js', 'src/system.js'],
+    sources:  ['src/loaderhooks.js', 'src/documentloader.js', 'src/scopedscript.js', 'src/system.js'],
     destBase: './dist/html-exports',
   },
   sysjs: {

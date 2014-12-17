@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="../../node_modules/webcomponents.js/webcomponents.js"></script>
+  <script src="../../node_modules/web-component-tester/browser.js"></script>
+  <script src="../../node_modules/traceur/bin/traceur.js"></script>
+  <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.js"></script>
+  <script src="../../dist/html-exports.min.js"></script>
+  <script src="../shared/fixtures.js"></script>
+
+  <!--
+  We'd like to ../fixtures/foo, but that's broken. See:
+  https://github.com/ModuleLoader/es6-module-loader/issues/255
+  -->
+  <import src="scopedscript/foo" as="MegaFoo" values="bar">
+</head>
+<body>
+  <script>
+    _scopedScript = {}
+    _scopedModule = {}
+  </script>
+
+  <script type="scoped">
+    _scopedScript.MegaFoo = MegaFoo
+    _scopedScript.bar     = bar
+  </script>
+  <script type="module">
+    // _scopedModule.MegaFoo = MegaFoo
+  </script>
+
+  <script>
+    // var fixtures = importFixtures('scoped.html')
+
+    var importsLoaded = new Promise(function(resolve, reject) {
+      document.addEventListener('DeclaredImportsLoaded', resolve)
+    })
+
+    // Both test that the event fires, and block subsequent tests from running
+    // until it does.
+    specify('DeclaredImportsLoaded fires when imports have loaded', function(done) {
+      importsLoaded.then(function(event) {
+        var imported = event.detail.dependencies.map(function(d) { return d.name })
+        expect(imported).to.have.members(['scopedscript/foo'])
+        done()
+      })
+    })
+
+    function scopedTagCommon(values) {
+      specify('pulls default imports', function() {
+        expect(values.MegaFoo).to.equal('I am Foo')
+      })
+
+      specify('pulls named imports', function() {
+        expect(values.bar).to.equal('I am Foo Bar')
+      })
+
+      specify('pulls renamed imports')
+    }
+
+    describe('<script type="scoped">', function() {
+      scopedTagCommon(_scopedScript)
+    })
+
+    describe.skip('<script type="module">', function() {
+      scopedTagCommon(_scopedModule)
+    })
+  </script>
+</body>
+</html>

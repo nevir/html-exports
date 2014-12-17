@@ -71,7 +71,7 @@
     }
 
     return {
-      deps: scope.depsFor(doc),
+      deps: scope.depsFor(doc).map(function(d) { return d.name }),
       execute: function executeHTML() {
         return this.newModule(scope.exportsFor(doc))
       }.bind(this),
@@ -91,7 +91,41 @@
   scope.depsFor = function depsFor(document) {
     var declaredDependencies = document.querySelectorAll('import[src]')
     return Array.prototype.map.call(declaredDependencies, function(importNode) {
-      return importNode.getAttribute('src')
+      // Much like ES6's import syntax, you can also choose which exported
+      // values to bring into scope, and rename them.
+      var aliases = {}
+      // The default export can be imported via the `as` attribute:
+      //
+      // ```html
+      // <import src="jQuery" as="$">
+      // ```
+      if (importNode.hasAttribute('as')) {
+        aliases.default = importNode.getAttribute('as')
+      }
+      // Named exports can be imported via the `values` attribute (space
+      // separated).
+      //
+      // ```html
+      // <import src="lodash" values="compact">
+      // ```
+      if (importNode.hasAttribute('values')) {
+        importNode.getAttribute('values').split(/\s+/).forEach(function(key) {
+          if (key === '') return
+          aliases[key] = key
+        })
+      }
+
+      // Each dependency returned is an object with:
+      return {
+        // * `name`: The declared name; you may want to `normalize` it.
+        name: importNode.getAttribute('src'),
+        // * `aliases`: A map of exported values to the keys they should be
+        //              exposed as.
+        aliases: aliases,
+        // * `source`: Source element, to aid in debugging. Expect a beating if
+        //             you leak this!
+        source: importNode,
+      }
     })
   }
 
