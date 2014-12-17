@@ -8,27 +8,31 @@
   // Processes any scoped scripts, and executes them after all declared imports
   // within a document have loaded.
   scope.runScopedScripts = function runScopedScripts(document) {
-    var deps     = scope.depsFor(document)
-    var options  = {name: document.location.pathname}
-    var promises = deps.map(function(dep) {
-      return System.import(dep.name, options)
-    })
-    Promise.all(promises).then(function(allExports) {
-      var exportMap = _flattenExports(allExports, deps)
-      document.dispatchEvent(new CustomEvent('DeclaredImportsLoaded', {detail: {
-        exportMap:    exportMap,
-        dependencies: deps,
-      }}))
+    return new Promise(function(resolve, reject) {
+      var deps     = scope.depsFor(document)
+      var options  = {name: document.baseURI || document.location.pathname}
+      var promises = deps.map(function(dep) {
+        return System.import(dep.name, options)
+      })
+      Promise.all(promises).then(function(allExports) {
+        var exportMap = _flattenExports(allExports, deps)
+        document.dispatchEvent(new CustomEvent('DeclaredImportsLoaded', {detail: {
+          exportMap:    exportMap,
+          dependencies: deps,
+        }}))
 
-      // A scoped script can be declared as:
-      //
-      // ```html
-      // <script type="scoped">...</script>
-      // ```
-      var scripts   = document.querySelectorAll('script[type="scoped"]')
-      for (var i = 0; i < scripts.length; i++) {
-        _executeScript(exportMap, scripts[i])
-      }
+        // A scoped script can be declared as:
+        //
+        // ```html
+        // <script type="scoped">...</script>
+        // ```
+        var scripts   = document.querySelectorAll('script[type="scoped"]')
+        for (var i = 0; i < scripts.length; i++) {
+          _executeScript(exportMap, scripts[i])
+        }
+
+        resolve()
+      })
     })
   }
 

@@ -6,15 +6,16 @@
   <script src="../../node_modules/web-component-tester/browser.js"></script>
   <script src="../../node_modules/traceur/bin/traceur.js"></script>
   <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.js"></script>
-  <script src="../../dist/html-exports.min.js"></script>
+  <script src="../../dist/html-exports.debug.js"></script>
   <script src="../shared/fixtures.js"></script>
 
   <import src="../fixtures/foo" as="MegaFoo" values="bar baz">
 </head>
 <body>
   <script>
-    _scopedScript = {}
-    _scopedModule = {}
+    _scopedScript   = {}
+    _scopedModule   = {}
+    _importedScript = {}  // in fixtures/scoped.html
   </script>
 
   <script type="scoped">
@@ -55,8 +56,12 @@
       specify('pulls renamed imports')
     }
 
-    describe('<script type="scoped">', function() {
+    describe('<script type="scoped"> in the root document', function() {
       scopedTagCommon(_scopedScript)
+    })
+
+    describe('<script type="scoped"> in an import', function() {
+      scopedTagCommon(_importedScript)
     })
 
     describe.skip('<script type="module">', function() {

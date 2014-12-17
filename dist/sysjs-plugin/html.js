@@ -35,17 +35,25 @@
         reject(new Error('Unknown failure when fetching URL: ' + load.address))
       })
 
-      // A downside of this approach is that the module loader asserts that
-      // module source is a string. Not to mention, userland loaders such as
-      // SystemJS tend to assume that the source is JavaScript.
       link.addEventListener('load', function() {
-        // To protect ourselves, and adhere to the spec as best we can, the
-        // real source is placed in the load record's `metadata` as a side
-        // channel.
-        load.metadata.importedHTMLDocument = link.import
-        // And then, to appease the spec/SystemJS, we provide a dummy value for
-        // `source`.
-        resolve('')
+        // One problem with the module loader spec is that the `instantiate`
+        // step does not support asynchronous execution. We want that, so that
+        // we can ensure that any async-executed scripts in the document defer
+        // its load (also so we can extract exports from them).
+        //
+        // Thus, we perform any async logic during load to emulate that (if
+        // scoped scripts are enabled).
+        var runScripts = scope.runScopedScripts && scope.runScopedScripts(link.import) || Promise.resolve()
+        runScripts.then(function() {
+          // Another difficulty of the module loader spec is that it rightfully
+          // assumes that all sources are a `String`. Because we completely skip
+          // over raw source, we need to be a little more crafty by placing the
+          // real source in a side channel.
+          load.metadata.importedHTMLDocument = link.import
+          // And then, to appease the spec/SystemJS, we provide a dummy value for
+          // `source`.
+          resolve('')
+        })
       })
     })
   }

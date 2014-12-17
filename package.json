@@ -1,7 +1,7 @@
 {
   "name": "html-exports",
   "devDependencies": {
-    "es6-module-loader": "nevir/es6-module-loader#scriptmodulefix",
+    "es6-module-loader": "ModuleLoader/es6-module-loader#master",
     "gulp": "^3.8.10",
     "gulp-concat": "^2.4.2",
     "gulp-groc": "nevir/gulp-groc#master",
