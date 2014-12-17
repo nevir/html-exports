@@ -25,12 +25,20 @@ duplicating much of the logic expressed by the HTML Imports polyfill.</p></div><
 
       link.addEventListener(<span class="hljs-string">'error'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
         reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">'Unknown failure when fetching URL: '</span> + load.address))
-      })</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>A downside of this approach is that the module loader asserts that
-module source is a string. Not to mention, userland loaders such as
-SystemJS tend to assume that the source is JavaScript.</p></div></div><div class="code"><div class="wrapper">      link.addEventListener(<span class="hljs-string">'load'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>To protect ourselves, and adhere to the spec as best we can, the
-real source is placed in the load record&#39;s <code>metadata</code> as a side
-channel.</p></div></div><div class="code"><div class="wrapper">        load.metadata.importedHTMLDocument = link.import</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>And then, to appease the spec/SystemJS, we provide a dummy value for
-<code>source</code>.</p></div></div><div class="code"><div class="wrapper">        resolve(<span class="hljs-string">''</span>)
+      })
+
+      link.addEventListener(<span class="hljs-string">'load'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>One problem with the module loader spec is that the <code>instantiate</code>
+step does not support asynchronous execution. We want that, so that
+we can ensure that any async-executed scripts in the document defer
+its load (also so we can extract exports from them).</p>
+<p>Thus, we perform any async logic during load to emulate that (if
+scoped scripts are enabled).</p></div></div><div class="code"><div class="wrapper">        <span class="hljs-keyword">var</span> runScripts = scope.runScopedScripts &amp;&amp; scope.runScopedScripts(link.import) || Promise.resolve()
+        runScripts.then(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Another difficulty of the module loader spec is that it rightfully
+assumes that all sources are a <code>String</code>. Because we completely skip
+over raw source, we need to be a little more crafty by placing the
+real source in a side channel.</p></div></div><div class="code"><div class="wrapper">          load.metadata.importedHTMLDocument = link.import</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>And then, to appease the spec/SystemJS, we provide a dummy value for
+<code>source</code>.</p></div></div><div class="code"><div class="wrapper">          resolve(<span class="hljs-string">''</span>)
+        })
       })
     })
   }</div></div></div><div class="segment"><div class="comments "><div class="wrapper"><h2 id="-loaderhooks-instantiate-"><code>LoaderHooks.instantiate</code></h2></div></div></div><div class="segment"><div class="comments "><div class="wrapper"><p>Once we have a document fetched via HTML imports, we can extract the

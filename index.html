@@ -1,34 +1,56 @@
 <!DOCTYPE html><html lang="en"><head><title>index</title></head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"><meta name="groc-relative-root" content=""><meta name="groc-document-path" content="index"><meta name="groc-project-path" content="README.md"><meta name="groc-github-url" content="https://github.com/nevir/html-exports"><link rel="stylesheet" type="text/css" media="all" href="assets/style.css"><script type="text/javascript" src="assets/behavior.js"></script><body><div id="meta"><div class="file-path"><a href="https://github.com/nevir/html-exports/blob/master/README.md">README.md</a></div></div><div id="document"><div class="segment"><div class="comments "><div class="wrapper"><h1 id="html-exports">HTML Exports</h1>
 <p>Why let JavaScript have all the fun? HTML documents can be modules too!</p>
-<p><strong>I&#39;m still playing with the syntax and behavior; expect things to change.</strong></p>
 <h2 id="the-syntax">The Syntax</h2>
 <h3 id="declaring-exports">Declaring Exports</h3>
-<p>Just like ES6 modules, you can choose particular values to export from a HTML 
-document. Simply place an <code>export</code> attribute on any element with that you wish
-to export:</p>
+<p>Just like ES6 modules, you can choose particular values to export from a HTML document. Simply place an <code>export</code> attribute on any element with that you wish to export:</p>
 <pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">div</span> <span class="hljs-attribute">export</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"user"</span>&gt;</span>...<span class="hljs-tag">&lt;/<span class="hljs-title">div</span>&gt;</span></code></pre>
-<p>You can also declare the default export of the document by tagging an element
-with <code>default</code> (<code>id</code> is optional).</p>
+<p>You can also declare the default export of the document by tagging an element with <code>default</code> (<code>id</code> is optional).</p>
 <pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">section</span> <span class="hljs-attribute">export</span> <span class="hljs-attribute">default</span> <span class="hljs-attribute">id</span>=<span class="hljs-value">"post"</span>&gt;</span>...<span class="hljs-tag">&lt;/<span class="hljs-title">section</span>&gt;</span></code></pre>
 <p>If you don&#39;t declare a default export, the document is exported.</p>
 <h3 id="declaring-dependencies">Declaring Dependencies</h3>
 <p>You can also declare dependencies on other modules from HTML.</p>
-<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span>/&gt;</span></code></pre>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"Polymer"</span>/&gt;</span></code></pre>
+<p>Similar to ES6&#39;s <code>import</code> syntax, you can import particular values from the module, too. A default export can be imported via:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span> <span class="hljs-attribute">as</span>=<span class="hljs-value">"$"</span>/&gt;</span></code></pre>
+<p>Named exports can also be imported via the <code>values</code> attribute:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"ng/di/annotations"</span> <span class="hljs-attribute">value</span>=<span class="hljs-value">"Inject"</span>/&gt;</span></code></pre>
+<p><em>Not supported yet: Some way of aliasing named imports. The technical side is straightforward, but a decent syntax is unclear. Suggestions welcome!</em></p>
+<h3 id="using-imported-values">Using Imported Values</h3>
+<p>We also introduce the concept of &quot;scoped&quot; <code>&lt;script&gt;</code> elements, that is a close analogue to <a href="https://github.com/ModuleLoader/es6-module-loader#module-tag">the <code>&lt;module&gt;</code> element</a>, but for ES5. It gives you the following:</p>
+<ul>
+<li>Any values imported by the document are made available to a scoped script.</li>
+<li>Scoped scripts run in strict mode.</li>
+<li>Scoped scripts execute asynchronously (i.e. once all modules have loaded).</li>
+</ul>
+<p>For example:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">import</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"jQuery"</span> <span class="hljs-attribute">as</span>=<span class="hljs-value">"$"</span>/&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">type</span>=<span class="hljs-value">"scoped"</span>&gt;</span><span class="javascript">
+$(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  <span class="hljs-comment">// doing things!</span>
+})
+</span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span></code></pre>
+<p>That example is equivalent to the ES6 form:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">module</span>&gt;</span>
+import $ from 'jQuery'
+$(() =&gt; {
+  // doing things!
+})</code></pre>
 <h3 id="importing-html-modules-via-es6">Importing HTML Modules Via ES6</h3>
 <p>Just treat a HTML module as you would any other module:</p>
 <pre><code>import { user, post } from &#39;./templates.html&#39;</code></pre>
 <p><code>user</code> and <code>post</code> are the <em>elements</em> exported by <code>templates.html</code>!</p>
 <h2 id="using-it">Using It</h2>
-<p>Include <a href="dist/"><code>html-exports.min.js</code></a> (~0.8KB gzipped) in your page, after 
-loading <a href="https://github.com/ModuleLoader/es6-module-loader">es6-module-loader</a>:</p>
+<p>Include <a href="dist/"><code>html-exports.min.js</code></a> (~0.8KB gzipped) in your page, after loading <a href="https://github.com/ModuleLoader/es6-module-loader">es6-module-loader</a>:</p>
 <pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"es6-module-loader.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span>
 <span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"html-exports.min.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span></code></pre>
-<p>This gives you the default behavior where any module with a <code>.html</code> extension
-is treated as a HTML module.</p>
+<p>This gives you the default behavior where any module with a <code>.html</code> extension is treated as a HTML module.</p>
+<h3 id="compatibility">Compatibility</h3>
+<p>This library currently supports IE9+ and evergreen browsers.</p>
+<p>For browsers that do not support HTML imports (i.e. everything but Chrome), you will need to <a href="https://github.com/webcomponents/webcomponentsjs">polyfill it</a>:</p>
+<pre><code class="lang-html"><span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"HTMLImports.min.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-title">script</span> <span class="hljs-attribute">src</span>=<span class="hljs-value">"html-exports.min.js"</span>&gt;</span><span class="javascript"></span><span class="hljs-tag">&lt;/<span class="hljs-title">script</span>&gt;</span></code></pre>
 <h3 id="systemjs">SystemJS</h3>
-<p>Alternatively, you can use the SystemJS plugin by grabbing
-<a href="dist/sysjs-plugin">a build</a> of it, renaming your build to <code>html.js</code> and
-placing that build somewhere on your load path for SystemJS to discover.</p>
+<p>Alternatively, you can use the SystemJS plugin by grabbing <a href="dist/sysjs-plugin">a build</a> of it, renaming your build to <code>html.js</code> and placing that build somewhere on your load path for SystemJS to discover.</p>
 <p>You can then load HTML modules via:</p>
 <pre><code class="lang-js"><span class="hljs-comment">// Implicit plugin name</span>
 import { user, post } from <span class="hljs-string">'./templates.html!'</span>
@@ -41,5 +63,4 @@ import { user, post } from <span class="hljs-string">'./templates.html!html'</sp
 <p>Run this in the background for continuous testing/building:</p>
 <pre><code class="lang-sh">gulp</code></pre>
 <h2 id="understanding-it">Understanding It</h2>
-<p>For a deeper understanding of how HTML Exports works, take a look at
-<a href="https://nevir.github.io/html-exports">the annotated source</a>.</p></div></div></div></div></body></html>
+<p>For a deeper understanding of how HTML Exports works, take a look at <a href="https://nevir.github.io/html-exports">the annotated source</a>.</p></div></div></div></div></body></html>
