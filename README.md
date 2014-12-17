@@ -89,14 +89,15 @@ import { user, post } from './templates.html'
 
 ## Using It
 
-Include [`html-exports.min.js`](dist/) (~0.8KB gzipped) in your page, after loading [es6-module-loader](https://github.com/ModuleLoader/es6-module-loader):
+Include [`html-exports.min.js`](dist/) (~0.8KB gzipped) in your page, after loading [es6-module-loader](https://github.com/ModuleLoader/es6-module-loader) and [SystemJS](https://github.com/systemjs/systemjs).
 
 ```html
 <script src="es6-module-loader.js"></script>
+<script src="system.js"></script>
 <script src="html-exports.min.js"></script>
 ```
 
-This gives you the default behavior where any module with a `.html` extension is treated as a HTML module.
+This gives you the default behavior where any module with a `.html` extension is treated as a HTML module. SystemJS is only necessary if you are loading ES5 code.
 
 
 ### Compatibility

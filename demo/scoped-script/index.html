@@ -6,7 +6,6 @@
   <title>HTML Exports!</title>
 
   <!-- The polyfill, and dependencies. -->
-  <script src="../../node_modules/traceur/bin/traceur.js"></script>
   <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.js"></script>
   <script src="../../node_modules/systemjs/dist/system.js"></script>
   <script src="../../dist/html-exports.debug.js"></script>
@@ -14,6 +13,7 @@
   <!-- Declared dependencies in HTML! -->
   <import src="./awesomesauce" as="doAwesomeThings">
 
+  <!-- Using values from those dependencies! -->
   <script type="scoped">
     var button = document.createElement('button')
     button.textContent = 'Awesome from <script type="scoped">'
