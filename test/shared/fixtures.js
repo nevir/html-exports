@@ -11,22 +11,15 @@ function importFixtures() {
   // https://github.com/ModuleLoader/es6-module-loader/issues/255
   var importOptions = {name: document.location.pathname};
 
-  var numToLoad = arguments.length
-  var numLoaded = 0
-  Array.prototype.forEach.call(arguments, function(path) {
-    System.import('../fixtures/' + path, importOptions).then(function(mod) {
+  var imports = Array.prototype.map.call(arguments, function(path) {
+    return System.import('../fixtures/' + path, importOptions).then(function(mod) {
       fixtures[path.replace(/\..+$/, '')] = mod
-      numLoaded = numLoaded + 1
     })
   })
 
-  // Wait until all the fixtures have loaded.
+  // Block tests until all the fixtures have loaded
   before(function(done) {
-    var intervalId = setInterval(function() {
-      if (numLoaded < numToLoad) return
-      clearInterval(intervalId)
-      done()
-    }, 1)
+    Promise.all(imports).then(function() { done() })
   })
 
   return fixtures
