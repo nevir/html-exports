@@ -72,6 +72,7 @@ import $ from 'jQuery'
 $(() => {
   // doing things!
 })
+</module>
 ```
 
 
