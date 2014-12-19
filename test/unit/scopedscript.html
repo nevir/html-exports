@@ -25,7 +25,7 @@
   </script>
 
   <script>
-    var fixtures = importFixtures('scoped.html')
+    var fixtures = importFixtures(['scoped.html'])
 
     var importsLoaded = new Promise(function(resolve, reject) {
       document.addEventListener('DeclaredImportsLoaded', resolve)

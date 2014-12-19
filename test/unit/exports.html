@@ -10,7 +10,11 @@
 </head>
 <body>
   <script>
-    var fixtures = importFixtures('words.html', 'simpledefault.html', 'nameddefault.html')
+    var fixtures = importFixtures([
+      'words.html',
+      'simpledefault.html',
+      'nameddefault.html',
+    ])
 
     // Yay, tautology!
     specify('exported elements are exported', function() {
