@@ -1,3 +1,49 @@
+// # Internal Helpers
+
+;(function(scope) {
+  'use strict'
+
+  var _util = {}
+  scope._util = _util
+
+  // ## `flattenValueTuples`
+
+  // After collecting value tuples ([key, value, source]), we can flatten them
+  // into an value map, and also warn about any masked values.
+  scope._util.flattenValueTuples = function flattenValueTuples(valueTuples, ignore) {
+    var valueMap = {}
+    var masked   = []
+    for (var i = 0, tuple; tuple = valueTuples[i]; i++) {
+      var key = tuple[0]
+      if (key in valueMap && (!ignore || ignore.indexOf(key) === -1)) {
+        masked.push(key)
+      }
+      valueMap[key] = tuple[1]
+    }
+
+    if (masked.length) {
+      masked.forEach(_warnMaskedValues.bind(null, valueTuples))
+    }
+
+    return valueMap
+  }
+
+  // It's important that we give authors as much info as possible to diagnose
+  // any problems with their source. So, we spend a bit of computational effort
+  // whenever values are masked (imports, exports, etc).
+  function _warnMaskedValues(valueTuples, key) {
+    var conflicting = valueTuples.filter(function(tuple) {
+      return tuple[0] === key
+    }).map(function(tuple) {
+      return tuple[2]
+    })
+    console.warn.apply(console,
+      ['Multiple values named "' + key + '" were evaluated:'].concat(conflicting)
+    )
+  }
+
+})(this.HTMLExports = this.HTMLExports || {})
+
 // # LoaderHooks
 
 // `HTMLExports.LoaderHooks` is a mixable map of loader hooks that provide the
@@ -140,8 +186,9 @@
   // ### `HTMLExports.exportsFor`
 
   // HTML modules can export elements that are tagged with `export`.
-  scope.exportsFor = function exportsFor(document) {
-    var exports = {}
+  scope._exportTuplesFor = function _exportTuplesFor(document) {
+    //- We collect [key, value, source] and then flatten at the end.
+    var valueTuples = []
     // They can either be named elements (via `id`), such as:
     //
     // ```html
@@ -149,7 +196,7 @@
     // ```
     var exportedNodes = document.querySelectorAll('[export][id]')
     for (var i = 0, node; node = exportedNodes[i]; i++) {
-      exports[node.getAttribute('id')] = node
+      valueTuples.push([node.getAttribute('id'), node, node])
     }
 
     // Or they can be the default export when tagged with `default`:
@@ -161,13 +208,29 @@
     if (defaultNodes.length > 1) {
       throw new Error('Only one default export is allowed per document')
     } else if (defaultNodes.length === 1) {
-      exports.default = defaultNodes[0]
+      valueTuples.push(['default', defaultNodes[0], defaultNodes[0]])
     // Otherwise, the default export will be the document.
     } else {
-      exports.default = document
+      valueTuples.push(['default', document, document])
     }
 
-    return exports
+    // Furthermore, values exported by `<script type="scoped">` blocks are also
+    // exported via the document. This depends on `HTMLExports.runScopedScripts`
+    // having been run already.
+    var scopedScripts = document.querySelectorAll('script[type="scoped"]')
+    for (i = 0; node = scopedScripts[i]; i++) {
+      if (!node.exports) continue;
+      var keys = Object.keys(node.exports)
+      for (var j = 0, key; key = keys[j]; j++) {
+        valueTuples.push([key, node.exports[key], node])
+      }
+    }
+
+    return valueTuples
+  }
+
+  scope.exportsFor = function exportsFor(document) {
+    return scope._util.flattenValueTuples(scope._exportTuplesFor(document), ['default'])
   }
 
   // ## Internal Implementation
@@ -266,20 +329,24 @@
         return System.import(dep.name, options)
       })
       Promise.all(promises).then(function(allExports) {
-        var exportMap = _flattenExports(allExports, deps)
-        document.dispatchEvent(new CustomEvent('DeclaredImportsLoaded', {detail: {
-          exportMap:    exportMap,
-          dependencies: deps,
-        }}))
+        _fireEvent(document, 'DeclaredImportsLoaded')
 
         // A scoped script can be declared as:
         //
         // ```html
         // <script type="scoped">...</script>
         // ```
-        var scripts   = document.querySelectorAll('script[type="scoped"]')
-        for (var i = 0; i < scripts.length; i++) {
-          _executeScript(exportMap, scripts[i])
+        var scripts = document.querySelectorAll('script[type="scoped"]')
+        if (!scripts.length) { return resolve() }
+
+        var exportMap = _resolveExports(allExports, deps, document)
+        try {
+          for (var i = 0, script; script = scripts[i]; i++) {
+            _executeScript(exportMap, script)
+          }
+        // If any scripts fail to execute, we fail the entire load.
+        } catch (error) {
+          reject(error)
         }
 
         resolve()
@@ -292,53 +359,55 @@
   // After we have loaded all the declared imports for a particular document,
   // we need to flatten the imported values into a set of (aliased) keys and
   // their values.
-  function _flattenExports(allExports, deps) {
+  function _resolveExports(allExports, deps, document) {
     console.assert(allExports.length === deps.length, 'declared dependencies do not match loaded exports')
-    var exportMap = {}
-    var masked    = []
-
+    var valueTuples = []
     for (var i = 0, dep; dep = deps[i]; i++) {
-      Object.keys(dep.aliases).forEach(function(source) {
-        var target = dep.aliases[source]
-        // It is entirely possible for multiple import declarations to attempt
-        // to write to the same key. We'll mark those, so that we can warn about
-        // them at the end of te flattening process.
-        if (target in exportMap) { masked.push(target) }
-        // Similarly, it is possible for a declared import to request a value
-        // that wasn't actually imported. We want to warn about that, too.
-        if (!(source in allExports[i])) {
-          console.warn('"' + source + '" was requested, but not exported from "' + dep.name + '".', dep.source)
+      var keys = Object.keys(dep.aliases)
+      for (var j = 0, key; key = keys[j]; j++) {
+        var alias = dep.aliases[key]
+        if (!(key in allExports[i])) {
+          console.warn('"' + key + '" was requested, but not exported from "' + dep.name + '".', dep.source)
         }
-        exportMap[target] = allExports[i][source]
-      })
+        valueTuples.push([alias, allExports[i][key], dep.source])
+      }
     }
 
-    if (masked.length) {
-      masked.forEach(_warnMaskedImports.bind(null, allExports, deps))
-    }
+    // As a convenience, we also expose values exported by the current document.
+    valueTuples = valueTuples.concat(scope._exportTuplesFor(document))
+    var exportMap = scope._util.flattenValueTuples(valueTuples)
+    // We have to be careful not to expose the document's default value though.
+    delete exportMap.default
 
     return exportMap
-  }
-
-  // It's important that we give authors as much info as possible to diagnose
-  // any problems with their source. So, we spend a bit of computational effort
-  // whenever imports are masked to let the author know where the conflicts
-  // originate.
-  function _warnMaskedImports(allExports, deps, name) {
-    var conflicting = deps.filter(function(dep) {
-      return dep.aliases
-    }).map(function(dep) {
-      return dep.source
-    })
-    console.warn('Multiple values named "' + name + '" were requested by imports:', conflicting)
   }
 
   // After all the imported values are flattened and validated, it is time to
   // execute the scoped scripts within the document.
   function _executeScript(exportMap, script) {
-    console.debug('executing scoped script', script, 'scoped imports:', exportMap)
+    // Scoped scripts follow the same lifecycle events as a regular `<script>`
+    // element. See http://www.w3.org/TR/html5/scripting-1.html
+    if (!_fireEvent(script, 'beforescriptexecute', true, true)) {
+      // You can cancel a scoped script by canceling `beforescriptexecute`.
+      console.debug('scoped script', script, 'was canceled')
+      return
+    } else {
+      console.debug('executing scoped script', script, 'scoped imports:', exportMap)
+    }
+
     var keys   = Object.keys(exportMap)
     var values = keys.map(function(k) { return exportMap[k] })
+    // We support CommonJS style exports for scoped scripts. Ideally, we'd be
+    // reusing `System.module`, but there doesn't appear to be a clean way of
+    // also supporting scoped imports via that mechanism.
+    if ('exports' in exportMap || 'module' in exportMap) {
+      throw new Error('"exports" and "module" are reserved names for scoped scripts')
+    }
+    keys.push('exports', 'module')
+    values.push({})
+    values.push({exports: values[values.length - 1]})
+    var module = values[values.length - 1]
+
     // Scoped scripts are evaluated in strict mode. It's the future!
     var source = '"use strict";\n' + script.textContent
 
@@ -354,7 +423,26 @@
         'Imported values:', exportMap, '\n',
         'Script body:', source, '\n')
       throw error
+    } finally {
+      // Once a script has executed (for better or worse), we fire script
+      // lifecycle events. Interestingly, the spec (and native impls) do not
+      // appear to fire an `error` event for scripting errors, so we omit that.
+      //
+      // See http://www.w3.org/TR/html5/scripting-1.html for behavior.
+      _fireEvent(script, 'afterscriptexecute', true)
+      setTimeout(function() { _fireEvent(script, 'load') }, 0)
     }
+
+    // Once a scoped script has run, its exports are exposed via the `exports`
+    // property on the script's element.
+    script.exports = module.exports
+  }
+
+  function _fireEvent(node, eventName, bubble, cancelable) {
+    var event = new Event(eventName)
+    event.bubbles    = !!bubble
+    event.cancelable = !!cancelable
+    return node.dispatchEvent(event)
   }
 
 })(this.HTMLExports = this.HTMLExports || {})

@@ -11,9 +11,10 @@
 <body>
   <script>
     var fixtures = importFixtures([
-      'words.html',
-      'simpledefault.html',
       'nameddefault.html',
+      'scopedexport.html',
+      'simpledefault.html',
+      'words.html',
     ])
 
     // Yay, tautology!
@@ -29,6 +30,8 @@
     specify('the document is the default default export', function() {
       expect(fixtures.words.default).to.be.an.instanceOf(Document)
       expect(fixtures.words.default.baseURI).to.match(/fixtures\/words\.html/)
+      expect(fixtures.scopedexport.default).to.be.an.instanceOf(Document)
+      expect(fixtures.scopedexport.default.baseURI).to.match(/fixtures\/scopedexport\.html/)
     })
 
     specify('default exports can be declared without an id', function() {
@@ -40,10 +43,10 @@
       expect(fixtures.nameddefault.default.textContent).to.equal('bar')
     })
 
-    specify('values can be exported from <script>')
-
-    specify('values can be exported from <module>')
-
+    specify('values can be exported from <script type="scoped">', function() {
+      expect(fixtures.scopedexport.stuff).to.equal(1)
+      expect(fixtures.scopedexport.things).to.equal(2)
+    })
   </script>
 </body>
 </html>

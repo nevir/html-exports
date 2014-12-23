@@ -52,6 +52,7 @@ We also introduce the concept of "scoped" `<script>` elements, that is a close a
 * Any values imported by the document are made available to a scoped script.
 * Scoped scripts run in strict mode.
 * Scoped scripts execute asynchronously (i.e. once all modules have loaded).
+* Scoped scripts can export values via CommonJS-style `exports`.
 
 For example:
 
@@ -73,6 +74,19 @@ $(() => {
   // doing things!
 })
 </module>
+```
+
+#### Exporting Values From Script
+
+As mentioned above, you can export values from a scoped script! These values are exported as part of the HTML module. You can even mix and match:
+
+```html
+<template export id="tentacle">...</template>
+<script type="scoped">
+exports.default = function Squid() {
+  // Oh hay there, I'm a squid!
+}
+</script>
 ```
 
 
@@ -97,7 +111,7 @@ Include [`html-exports.min.js`](dist/) (~0.8KB gzipped) in your page, after load
 <script src="html-exports.min.js"></script>
 ```
 
-This gives you the default behavior where any module with a `.html` extension is treated as a HTML module. SystemJS is only necessary if you are loading ES5 code.
+This gives you the default behavior where any module with a `.html` extension is treated as a HTML module. SystemJS is only necessary if you are loading ES5 code (e.g. CommonJS or AMD modules).
 
 
 ### Compatibility

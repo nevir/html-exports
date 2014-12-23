@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>HTML Exports!</title>
+
+  <!-- The polyfill, and dependencies. -->
+  <script src="../../node_modules/traceur/bin/traceur.js"></script>
+  <script src="../../node_modules/es6-module-loader/dist/es6-module-loader.src.js"></script>
+  <script src="../../node_modules/systemjs/dist/system.src.js"></script>
+  <script src="../../dist/html-exports.debug.js"></script>
+
+  <style>
+    squid-es5-combined, squid-es5-split {
+      display: block;
+      border:  1px solid #ccc;
+      padding: .5em;
+    }
+  </style>
+
+  <script type="module">
+    // This appears to be a System.js bug. Even though squid-es5-split depends
+    // on squidbits.html, System.js loads it *after* executing squid-es5-split.
+    import './squidbits.html'
+
+    import SquidES5Combined from './squid-es5-combined.html'
+    import SquidES5Split    from './squid-es5-split'
+    import SquidES6Split    from './squid-es6-split'
+
+    document.registerElement('squid-es5-combined', SquidES5Combined)
+    document.registerElement('squid-es5-split',    SquidES5Split)
+    document.registerElement('squid-es6-split',    SquidES6Split)
+  </script>
+</head>
+<body>
+  <h1>HTML Exports Custom Element Demo</h1>
+
+  <p>
+    HTML exports gives us a ton of flexibility around how modules are organized.
+    This demo serves as an example of organizational methods, by focusing on a
+    custom element.
+  </p>
+  <p>
+    Each example exports a prototype for the element, which we register directly
+    via this document.
+  </p>
+
+  <h2>&lt;squid-es5-combined&gt;</h2>
+  <p>
+    Both the element prototype and its templates are declared in the same file
+    (squid-es5-combined.html), with an ES5 element definition.
+  </p>
+  <squid-es5-combined></squid-es5-combined>
+
+  <h2>&lt;squid-es5-split&gt;</h2>
+  <p>
+    Another option is to structure your code as an ES5 module that imports its
+    templates separately. See squid-es5-split.js for a CommonJS approach.
+  </p>
+  <squid-es5-split></squid-es5-split>
+
+  <h2>&lt;squid-es6-split&gt;</h2>
+  <p>
+    A third option is to declare your element as an ES6 module and class that
+    imports its templates separately. See squid-es6-split.js for this approach.
+  </p>
+  <squid-es6-split></squid-es6-split>
+
+</body>
+</html>

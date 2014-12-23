@@ -1,3 +1,3 @@
-module.exports.default = function awesomesauce() {
+export default () => {
   alert('Awesomesauce!')
 }

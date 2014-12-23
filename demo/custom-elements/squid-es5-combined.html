@@ -1,0 +1,30 @@
+<!-- Example mixed-mode HTML module. -->
+
+<!-- We export elements (in case someone wants to consume just the templates) -->
+<template export id="ink">✗</template>
+<template export id="tentacle">
+  <svg width="200px" height="200px">
+    <path d="M10 80 Q 52.5 10, 95 80 T 180 80" stroke="black" fill="transparent"/>
+  </svg>
+</template>
+
+<!-- And we also export JS values via a scoped script -->
+<script type="scoped">
+  exports.default = Squid
+
+  function Squid() {}
+  Squid.prototype = Object.create(HTMLElement.prototype)
+
+  Squid.prototype.attachedCallback = function attachedCallback() {
+    this.name = this.tagName.toLowerCase()
+    console.debug(this.name, '#attachedCallback')
+
+    var root = this.createShadowRoot()
+    // Note that `ink` and `tentacle` are made available to the scoped script
+    // because they were exported (as a convenience).
+    root.appendChild(this.ownerDocument.importNode(ink.content, true))
+    for (var i = 0; i < 2; i++) {
+      root.appendChild(this.ownerDocument.importNode(tentacle.content, true))
+    }
+  }
+</script>

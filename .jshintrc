@@ -13,15 +13,5 @@
   "boss":      true,
   "esnext":    true,
   "browser":   true,
-  "node":      true,
-  "predef": [
-    "before",
-    "describe",
-    "Document",
-    "expect",
-    "HTMLExports",
-    "HTMLTemplateElement",
-    "importFixtures",
-    "specify"
-  ]
+  "node":      true
 }

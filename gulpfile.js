@@ -11,15 +11,16 @@ var uglify    = require('gulp-uglify')
 var webserver = require('gulp-webserver')
 
 var ALL_SOURCES  = ['gulpfile.js', '{demo,src,test}/**/*.{html,js}']
+var MAIN_SOURCES = ['src/**/*.js']
 var PROJECT_ROOT = __dirname
 
 var BUILD_VARIATIONS = {
   main: {
-    sources:  ['src/loaderhooks.js', 'src/documentloader.js', 'src/scopedscript.js', 'src/system.js'],
+    sources:  ['src/util.js', 'src/loaderhooks.js', 'src/documentloader.js', 'src/scopedscript.js', 'src/system.js'],
     destBase: './dist/html-exports',
   },
   sysjs: {
-    sources:  ['src/loaderhooks.js', 'src/sysjs-plugin.js'],
+    sources:  ['src/util.js', 'src/loaderhooks.js', 'src/sysjs-plugin.js'],
     destBase: './dist/sysjs-plugin/html',
   },
 }
@@ -49,7 +50,7 @@ gulp.task('doc', function() {
 })
 
 gulp.task('test:style', function() {
-  return gulp.src(ALL_SOURCES)
+  return gulp.src(MAIN_SOURCES)
     .pipe(jshint.extract('auto'))
     .pipe(jshint())
     .pipe(jshint.reporter('jshint-stylish'))

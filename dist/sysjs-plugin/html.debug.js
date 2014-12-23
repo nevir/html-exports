@@ -1,3 +1,49 @@
+// # Internal Helpers
+
+;(function(scope) {
+  'use strict'
+
+  var _util = {}
+  scope._util = _util
+
+  // ## `flattenValueTuples`
+
+  // After collecting value tuples ([key, value, source]), we can flatten them
+  // into an value map, and also warn about any masked values.
+  scope._util.flattenValueTuples = function flattenValueTuples(valueTuples, ignore) {
+    var valueMap = {}
+    var masked   = []
+    for (var i = 0, tuple; tuple = valueTuples[i]; i++) {
+      var key = tuple[0]
+      if (key in valueMap && (!ignore || ignore.indexOf(key) === -1)) {
+        masked.push(key)
+      }
+      valueMap[key] = tuple[1]
+    }
+
+    if (masked.length) {
+      masked.forEach(_warnMaskedValues.bind(null, valueTuples))
+    }
+
+    return valueMap
+  }
+
+  // It's important that we give authors as much info as possible to diagnose
+  // any problems with their source. So, we spend a bit of computational effort
+  // whenever values are masked (imports, exports, etc).
+  function _warnMaskedValues(valueTuples, key) {
+    var conflicting = valueTuples.filter(function(tuple) {
+      return tuple[0] === key
+    }).map(function(tuple) {
+      return tuple[2]
+    })
+    console.warn.apply(console,
+      ['Multiple values named "' + key + '" were evaluated:'].concat(conflicting)
+    )
+  }
+
+})(this.HTMLExports = this.HTMLExports || {})
+
 // # LoaderHooks
 
 // `HTMLExports.LoaderHooks` is a mixable map of loader hooks that provide the
@@ -140,8 +186,9 @@
   // ### `HTMLExports.exportsFor`
 
   // HTML modules can export elements that are tagged with `export`.
-  scope.exportsFor = function exportsFor(document) {
-    var exports = {}
+  scope._exportTuplesFor = function _exportTuplesFor(document) {
+    //- We collect [key, value, source] and then flatten at the end.
+    var valueTuples = []
     // They can either be named elements (via `id`), such as:
     //
     // ```html
@@ -149,7 +196,7 @@
     // ```
     var exportedNodes = document.querySelectorAll('[export][id]')
     for (var i = 0, node; node = exportedNodes[i]; i++) {
-      exports[node.getAttribute('id')] = node
+      valueTuples.push([node.getAttribute('id'), node, node])
     }
 
     // Or they can be the default export when tagged with `default`:
@@ -161,13 +208,29 @@
     if (defaultNodes.length > 1) {
       throw new Error('Only one default export is allowed per document')
     } else if (defaultNodes.length === 1) {
-      exports.default = defaultNodes[0]
+      valueTuples.push(['default', defaultNodes[0], defaultNodes[0]])
     // Otherwise, the default export will be the document.
     } else {
-      exports.default = document
+      valueTuples.push(['default', document, document])
     }
 
-    return exports
+    // Furthermore, values exported by `<script type="scoped">` blocks are also
+    // exported via the document. This depends on `HTMLExports.runScopedScripts`
+    // having been run already.
+    var scopedScripts = document.querySelectorAll('script[type="scoped"]')
+    for (i = 0; node = scopedScripts[i]; i++) {
+      if (!node.exports) continue;
+      var keys = Object.keys(node.exports)
+      for (var j = 0, key; key = keys[j]; j++) {
+        valueTuples.push([key, node.exports[key], node])
+      }
+    }
+
+    return valueTuples
+  }
+
+  scope.exportsFor = function exportsFor(document) {
+    return scope._util.flattenValueTuples(scope._exportTuplesFor(document), ['default'])
   }
 
   // ## Internal Implementation

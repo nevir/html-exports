@@ -140,8 +140,9 @@
   // ### `HTMLExports.exportsFor`
 
   // HTML modules can export elements that are tagged with `export`.
-  scope.exportsFor = function exportsFor(document) {
-    var exports = {}
+  scope._exportTuplesFor = function _exportTuplesFor(document) {
+    //- We collect [key, value, source] and then flatten at the end.
+    var valueTuples = []
     // They can either be named elements (via `id`), such as:
     //
     // ```html
@@ -149,7 +150,7 @@
     // ```
     var exportedNodes = document.querySelectorAll('[export][id]')
     for (var i = 0, node; node = exportedNodes[i]; i++) {
-      exports[node.getAttribute('id')] = node
+      valueTuples.push([node.getAttribute('id'), node, node])
     }
 
     // Or they can be the default export when tagged with `default`:
@@ -161,13 +162,29 @@
     if (defaultNodes.length > 1) {
       throw new Error('Only one default export is allowed per document')
     } else if (defaultNodes.length === 1) {
-      exports.default = defaultNodes[0]
+      valueTuples.push(['default', defaultNodes[0], defaultNodes[0]])
     // Otherwise, the default export will be the document.
     } else {
-      exports.default = document
+      valueTuples.push(['default', document, document])
     }
 
-    return exports
+    // Furthermore, values exported by `<script type="scoped">` blocks are also
+    // exported via the document. This depends on `HTMLExports.runScopedScripts`
+    // having been run already.
+    var scopedScripts = document.querySelectorAll('script[type="scoped"]')
+    for (i = 0; node = scopedScripts[i]; i++) {
+      if (!node.exports) continue;
+      var keys = Object.keys(node.exports)
+      for (var j = 0, key; key = keys[j]; j++) {
+        valueTuples.push([key, node.exports[key], node])
+      }
+    }
+
+    return valueTuples
+  }
+
+  scope.exportsFor = function exportsFor(document) {
+    return scope._util.flattenValueTuples(scope._exportTuplesFor(document), ['default'])
   }
 
   // ## Internal Implementation
