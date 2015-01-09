@@ -1,7 +1,7 @@
 {
   "name": "html-exports",
   "devDependencies": {
-    "es6-module-loader": "ModuleLoader/es6-module-loader#master",
+    "es6-module-loader": "*",
     "gulp": "^3.8.10",
     "gulp-concat": "^2.4.2",
     "gulp-groc": "nevir/gulp-groc#master",
@@ -14,9 +14,9 @@
     "jshint-stylish": "^1.0.0",
     "lazypipe": "^0.2.2",
     "lodash": "^2.4.1",
-    "systemjs": "^0.10.1",
-    "traceur": "0.0.74",
-    "web-component-tester": "^2.0.5",
+    "systemjs": "*",
+    "traceur": "*",
+    "web-component-tester": "*",
     "webcomponents.js": "^0.5.1-1"
   }
 }
