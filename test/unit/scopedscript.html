@@ -34,8 +34,8 @@
     // until it does.
     specify('DeclaredImportsLoaded fires when imports have loaded', function(done) {
       importsLoaded.then(function(event) {
-        var imported = event.detail.dependencies.map(function(d) { return d.name })
-        expect(imported).to.have.members(['../fixtures/foo'])
+        var fullPath = System.normalize('../fixtures/foo', document.location.href)
+        expect(System.has(fullPath)).to.eq(true)
         done()
       })
     })
