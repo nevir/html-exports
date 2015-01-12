@@ -12,7 +12,7 @@
   <script src="../../dist/html-exports.debug.js"></script>
 
   <style>
-    squid-es5-combined, squid-es5-split {
+    squid-es5-combined, squid-es5-split, squid-es6-combined, squid-es6-split {
       display: block;
       border:  1px solid #ccc;
       padding: .5em;
@@ -26,10 +26,14 @@
 
     import SquidES5Combined from './squid-es5-combined.html'
     import SquidES5Split    from './squid-es5-split'
+    import SquidES6Combined from './squid-es6-combined.html'
     import SquidES6Split    from './squid-es6-split'
+
+    console.warn('index')
 
     document.registerElement('squid-es5-combined', SquidES5Combined)
     document.registerElement('squid-es5-split',    SquidES5Split)
+    document.registerElement('squid-es6-combined', SquidES6Combined)
     document.registerElement('squid-es6-split',    SquidES6Split)
   </script>
 </head>
@@ -59,6 +63,13 @@
     templates separately. See squid-es5-split.js for a CommonJS approach.
   </p>
   <squid-es5-split></squid-es5-split>
+
+  <h2>&lt;squid-es6-combined&gt;</h2>
+  <p>
+    Both the element prototype and its templates are declared in the same file
+    (squid-es6-combined.html), with an ES6 element definition.
+  </p>
+  <squid-es6-combined></squid-es6-combined>
 
   <h2>&lt;squid-es6-split&gt;</h2>
   <p>
