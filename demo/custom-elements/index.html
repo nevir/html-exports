@@ -22,19 +22,17 @@
   <script type="module">
     // This appears to be a System.js bug. Even though squid-es5-split depends
     // on squidbits.html, System.js loads it *after* executing squid-es5-split.
-    import './squidbits.html'
+    // import './squidbits.html'
 
-    import SquidES5Combined from './squid-es5-combined.html'
-    import SquidES5Split    from './squid-es5-split'
+    // import SquidES5Combined from './squid-es5-combined.html'
+    // import SquidES5Split    from './squid-es5-split'
     import SquidES6Combined from './squid-es6-combined.html'
-    import SquidES6Split    from './squid-es6-split'
+    // import SquidES6Split    from './squid-es6-split'
 
-    console.warn('index')
-
-    document.registerElement('squid-es5-combined', SquidES5Combined)
-    document.registerElement('squid-es5-split',    SquidES5Split)
+    // document.registerElement('squid-es5-combined', SquidES5Combined)
+    // document.registerElement('squid-es5-split',    SquidES5Split)
     document.registerElement('squid-es6-combined', SquidES6Combined)
-    document.registerElement('squid-es6-split',    SquidES6Split)
+    // document.registerElement('squid-es6-split',    SquidES6Split)
   </script>
 </head>
 <body>

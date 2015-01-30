@@ -7,7 +7,7 @@
 
   //
   document.addEventListener('DOMContentLoaded', function() {
-    scope.runScopedScripts(document)
+    // scope.runScopedScripts(document)
   })
 
 })(this.HTMLExports = this.HTMLExports || {})

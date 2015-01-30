@@ -1,3 +1,28 @@
+// # Configuration
+
+// As this loader extension is a bit of an experiment, there are a few knobs you
+// can turn to try different ways of loading HTML as modules.
+
+;(function(scope) {
+  'use strict'
+
+  scope.config = {
+    // Whether values exported by a HTML module should be made available to
+    // scripts inlined within that module.
+    //
+    // For example, when enabled:
+    //
+    // ```html
+    // <div export id="foo"></div>
+    // <script type="scoped">
+    // console.log(foo) // foo is in scope.
+    // </script>
+    // ```
+    exposeSameDocumentExports: true,
+  }
+
+})(this.HTMLExports = this.HTMLExports || {})
+
 // # Internal Helpers
 
 ;(function(scope) {
@@ -83,26 +108,84 @@
       })
 
       link.addEventListener('load', function() {
-        // One problem with the module loader spec is that the `instantiate`
-        // step does not support asynchronous execution. We want that, so that
-        // we can ensure that any async-executed scripts in the document defer
-        // its load (also so we can extract exports from them).
-        //
-        // Thus, we perform any async logic during load to emulate that (if
-        // scoped scripts are enabled).
-        var runScripts = scope.runScopedScripts && scope.runScopedScripts(link.import) || Promise.resolve()
-        runScripts.then(function() {
-          // Another difficulty of the module loader spec is that it rightfully
-          // assumes that all sources are a `String`. Because we completely skip
-          // over raw source, we need to be a little more crafty by placing the
-          // real source in a side channel.
-          load.metadata.importedHTMLDocument = link.import
-          // And then, to appease the spec/SystemJS, we provide a dummy value for
-          // `source`.
-          resolve('')
-        })
+        // A difficulty of the module loader spec is that it (rightfully)
+        // assumes that all sources are a `String`. Because we completely skip
+        // over raw source, we need to be a little more crafty by placing the
+        // real source in a side channel.
+        load.metadata._htmlExports = {document: link.import}
+        // And then, to appease the spec/SystemJS, we provide a dummy value for
+        // `source`.
+        resolve('')
       })
     })
+  }
+
+  // ## `LoaderHooks.translate`
+
+  // While this is not strictly a translation, we need to extract and normalize
+  // any dependencies and exports declared by a document. This is as good a
+  // place as any.
+  //
+  // This is also a great place to perform any async pre-execution, because the
+  // `instantiate` does not support asynchronous processing.
+  LoaderHooks.translate = function translateHTML(load) {
+    console.debug('HTMLExports.LoaderHooks.translate(', load, ')')
+    var meta = load.metadata._htmlExports
+    console.assert(meta && meta.document)
+
+    meta.docExportTuples = scope.exportTuplesFor(meta.document)
+    meta.docDependencies = scope.htmlDepsFor(meta.document)
+    meta.scopedScripts   = scope.scopedScriptsFor(meta.document, meta.docExportTuples)
+
+    // Once we have scanned for all the imports/exports/scripts within the
+    // document, we can determine the full range of dependencies for it.
+    var depNames = meta.docDependencies.map(function(d) { return d.name })
+    for (var i = 0, script; script = meta.scopedScripts[i]; i++) {
+      depNames = depNames.concat(script.deps)
+    }
+
+    // Unfortunately, however, we need to be careful to use the normalized
+    // module names when retrieving those modules during the `instantiate`
+    // step's `execute` function. This is an async process, so we have to
+    // perform it prior to that step.
+    return _normalizeAll(this, depNames).then(function(nameMap) {
+      meta.depMap = nameMap
+    })
+
+
+    // var htmlDeps = scope.htmlDepsFor(doc)
+    // var scripts  = scope.scopedScriptsFor(doc)
+    // //- We'll want these in `instantiate`
+    // load.metadata._htmlExports.htmlDeps = htmlDeps
+    // load.metadata._htmlExports.scripts  = scripts
+
+    // var depNames = htmlDeps.map(function(d) { return d.name })
+    // for (var i = 0, script; script = scripts[i]; i++) {
+    //   depNames = depNames.concat(script.deps)
+    // }
+
+    // // In this case, we need to be careful to normalize all dependency names so
+    // // that we can synchronously retrieve them during execution. Sadly, this is
+    // // an async process, so we can't embed it in `instantiate`.
+    // var normalizers = depNames.map(function(n) { return this.normalize(n) }.bind(this))
+    // return Promise.all(normalizers).then(function(names) {
+    //   console.assert(depNames.length == names.length)
+    //   var depMap = {}
+    //   for (var i = 0; i < names.length; i++) {
+    //     depMap[depNames[i]] = names[i]
+    //   }
+    //   load.metadata._htmlExports.depMap = depMap
+
+    //   for (var i = 0, dep; dep = htmlDeps[i]; i++) {
+    //     dep.normalized = depMap[dep.name]
+    //   }
+    //   for (var i = 0, script; script = scripts[i]; i++) {
+    //     script.normalizedDeps = script.deps.map(function(n) { return depMap[n] })
+    //   }
+
+    //   //- TODO(nevir): Do duplicate entries need to be trimmed?
+    //   load.metadata._htmlExports.deps = names
+    // })
   }
 
   // ## `LoaderHooks.instantiate`
@@ -119,15 +202,34 @@
   // prefetching declared module dependencies difficult/impossible.
   LoaderHooks.instantiate = function instantiateHTML(load) {
     console.debug('HTMLExports.LoaderHooks.instantiate(', load, ')')
-    var doc = load.metadata.importedHTMLDocument
-    if (!doc) {
-      throw new Error('HTMLExports bug: Expected fetched Document in metadata')
-    }
+    var meta = load.metadata._htmlExports
+    console.assert(meta && meta.depMap && meta.docExportTuples && meta.scopedScripts)
 
+    console.debug('meta for:', load.name, meta)
+    console.debug('deps for:', load.name, Object.keys(meta.depMap))
     return {
-      deps: scope.depsFor(doc).map(function(d) { return d.name }),
+      deps: Object.keys(meta.depMap),
       execute: function executeHTML() {
-        return this.newModule(scope.exportsFor(doc))
+        // Execution is pretty straightforward:
+        //
+        // * We extract any (HTML) exported values from the document.
+        var tuples = meta.docExportTuples
+        // * And execute any scoped scripts, merging their exported values into
+        //   those of the document.
+        for (var i = 0, script; script = meta.scopedScripts[i]; i++) {
+          tuples = tuples.concat(script.execute(function(name) {
+            return this.get(meta.depMap[name])
+          }.bind(this)))
+        }
+
+        // Note that up until this point, and exported value was represented as
+        // a value tuple. This allows us to provide useful errors/warnings for
+        // conflicting exports.
+        //
+        // The only value we allow conflicts for is `default` (latest wins).
+        var exports = scope._util.flattenValueTuples(tuples, ['default'])
+        console.debug('exports from:', load.name, exports)
+        return this.newModule(exports)
       }.bind(this),
     }
   }
@@ -136,13 +238,22 @@
 
   // ### `HTMLExports.depsFor`
 
+  // Each document can declare dependencies via various means. In order to speed
+  // up the load process, we scan a (potentially inert) document for any of
+  // those (aka preloading & proper ordering).
+  scope.depsFor = function depsFor(document) {
+    return [].concat(scope.htmlDepsFor(document), scope.jsDepsFor(document))
+  }
+
+  // #### `HTMLExports.htmlDepsFor`
+
   // HTML modules can declare dependencies on any other modules via the `import`
   // element:
   //
   // ```html
   // <import src="some-module">
   // ```
-  scope.depsFor = function depsFor(document) {
+  scope.htmlDepsFor = function htmlDepsFor(document) {
     var declaredDependencies = document.querySelectorAll('import[src]')
     return Array.prototype.map.call(declaredDependencies, function(importNode) {
       // Much like ES6's import syntax, you can also choose which exported
@@ -183,10 +294,47 @@
     })
   }
 
+  // #### `HTMLExports.jsDepsFor`
+
+  // JS modules can also have declared dependencies (ES6+):
+  //
+  // ```html
+  // <script type="module">
+  //   import { tentacle } from 'squid'
+  // </script>
+  // ```
+  scope.jsDepsFor = function jsDepsFor(document) {
+    var result  = []
+    var scripts = document.querySelectorAll('module,script[type="module"]')
+    for (var i = 0, script; script = scripts[i]; i++) {
+      result = result.concat(_depsForModule(script.textContent))
+    }
+
+    return result
+  }
+
+  function _depsForModule(script) {
+    var regex  = /(?:^\s*|[}\);\n]\s*)(?:import|export)\s+(?:[^;\n]+\s+from\s+)?(["'])((?:\\.|[^\1])*?)\1/g
+    var result = []
+    var source = script.textContent
+    var match
+    while (match = regex.exec(source)) {
+      console.warn(match)
+      result.push({
+        name:    match[2],
+        aliases: {}, // TODO
+        source:  script,
+      })
+    }
+    console.debug('deps for', script, result)
+
+    return result
+  }
+
   // ### `HTMLExports.exportsFor`
 
   // HTML modules can export elements that are tagged with `export`.
-  scope._exportTuplesFor = function _exportTuplesFor(document) {
+  scope.exportTuplesFor = function exportTuplesFor(document) {
     //- We collect [key, value, source] and then flatten at the end.
     var valueTuples = []
     // They can either be named elements (via `id`), such as:
@@ -230,7 +378,7 @@
   }
 
   scope.exportsFor = function exportsFor(document) {
-    return scope._util.flattenValueTuples(scope._exportTuplesFor(document), ['default'])
+    return scope._util.flattenValueTuples(scope.exportTuplesFor(document), ['default'])
   }
 
   // ## Internal Implementation
@@ -244,6 +392,17 @@
     document.head.appendChild(link)
 
     return link
+  }
+
+  function _normalizeAll(loader, names) {
+    var promises = names.map(function(n) { return loader.normalize(n) })
+    return Promise.all(promises).then(function(normalizedNames) {
+      var nameMap = Object.create(null)
+      for (var i = 0, normalizedName; normalizedName = normalizedNames[i]; i++) {
+        nameMap[names[i]] = normalizedName
+      }
+      return nameMap
+    })
   }
 
 })(this.HTMLExports = this.HTMLExports || {})

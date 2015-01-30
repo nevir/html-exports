@@ -10,6 +10,8 @@
 
 <!-- And we also export JS values via a scoped script -->
 <script type="module">
+  import { tentacle, ink } from './squidbits.html'
+
   export default class Squid extends HTMLElement {
     attachedCallback() {
       this.name = this.tagName.toLowerCase()
